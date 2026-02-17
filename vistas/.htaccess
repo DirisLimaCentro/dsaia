@@ -1,0 +1,12 @@
+#RewriteEngine On
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+#Options +FollowSymLinks
+#RewriteEngine On
+#RewriteRule ^([0-9]+).php /abc.php?id=$1 [QSA,L]
+
+Options +FollowSymlinks
+RewriteEngine on
+
+RewriteRule ^singlepage$ /desaia/vistas/ficha_vivienda.php [QSA]

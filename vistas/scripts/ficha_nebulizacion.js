@@ -1,0 +1,2707 @@
+var tabla;
+var locationsb=[];
+//Función que se ejecuta al inicio
+
+
+function init(){
+	listar();
+}
+
+function filtrar(){
+     renderData();  
+     getData();
+}
+
+
+function renderMapRuta(){
+    renderMapaRuta();
+}
+
+function buscar_lat(){
+
+    var direccion = document.getElementById('direccion_neb').value;
+    if (!direccion){
+      return false;
+    }
+    $("#loaderModal").show();
+
+            // Realizar la solicitud a Nominatim
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + direccion)
+            .then(response => response.json())
+            .then(data => {
+              $("#loaderModal").hide();
+              if (data.length > 0) {
+                var latitud = data[0].lat;
+                var longitud = data[0].lon;
+                //console.log('Latitud:', latitud);
+                //console.log('Longitud:', longitud);
+                //alert('Latitud: ' + latitud + ', Longitud: ' + longitud);
+                $("#latitud_neb").val(latitud);
+                $("#longitud_neb").val(longitud);
+
+              } else {
+                $("#latitud_neb").val('');
+                $("#longitud_neb").val('');
+                //alert('No se encontraron resultados para la dirección ingresada.');
+              }
+            })
+            .catch(error => {
+              $("#loaderModal").hide();
+              //console.error('Error al buscar la dirección:', error);
+              //alert('Error al buscar la dirección.');
+            });
+}
+
+
+
+function saveFichaF(){
+
+  if ($("#sector_neb").val()==''){
+    bootbox.alert('Ingrese sector');    
+    return false;
+  }
+
+  if ($("#fecha_neb").val()==''){
+     bootbox.alert('Ingrese fecha');
+     return false;
+  }
+
+  if ($("#id_local_destino").val()==''){
+    bootbox.alert('Seleccione establecimiento destino');
+    //$("#id_local_destino").focus();
+    return false;
+  }
+
+  if ($("#id_turno_neb").val()==''){
+     bootbox.alert('Seleccione turno');
+     return false;
+  }
+
+  if ($("#nro_brigada_neb").val()==''){
+    bootbox.alert('Ingrese numero de brigada');    
+    return false;
+  }
+
+  if ($("#id_jefe_brigada_neb").val()==''){
+     bootbox.alert('Seleccione jefe de brigada');
+     return false;
+  }
+
+  if ($("#nro_vuelta").val()==''){
+    bootbox.alert('Ingrese numero de vuelta');    
+    return false;
+  }
+
+  if ($("#hora_inicio_neb").val()==''){
+    bootbox.alert('Ingrese hora de inicio');    
+    return false;
+  }
+
+  if ($("#hora_termino_neb").val()==''){
+    bootbox.alert('Ingrese hora de termino');    
+    return false;
+  }
+
+  if ($("#tipo_maquina_neb").val()==''){
+    bootbox.alert('Ingrese tipo de maquina');    
+    return false;
+  }
+
+  if ($("#insecticida_neb").val()==''){
+    bootbox.alert('Ingrese insecticida');    
+    return false;
+  }
+
+  if ($("#id_nebulizador").val()==''){
+    bootbox.alert('Seleccione nebulizador');    
+    return false;
+  }
+
+  
+  
+
+   bootbox.confirm({
+        title: "Mensaje",
+        message: "Esta seguro de guardar el registro?",
+        buttons: {
+          cancel: {
+            label: '<i class="fa fa-times"></i> Cancelar'
+          },
+          confirm: {
+            label: '<i class="fa fa-check"></i> Aceptar',
+            className: "btn-success"
+          }
+        },
+        callback: function (result) {
+          
+          //console.log('This was logged in the callback: ' + result);
+          if (result){
+              $("#loaderModal").show();
+              //$op=($("#id_ficha").val()=='')?'saveFicha':'updateFicha';
+              $op='saveFicha';
+              id_f=($("#id_ficha").val()=='')?'0':$("#id_ficha").val();
+              $.ajax({
+                type: "POST",
+                url: "../ajax/ficha_nebulizacion.php?op="+$op,
+                //dataType: "json",
+                //data: JSON.stringify({ paramName: info }),
+                data : {
+                  id_ficha: id_f,
+                  id_local_destino: $("#id_local_destino").val(),
+                  sector_neb: $("#sector_neb").val(),
+                  fecha_neb: $("#fecha_neb").val(),
+                  id_turno_neb: $("#id_turno_neb").val(),
+                  nro_brigada_neb: $("#nro_brigada_neb").val(),
+                  id_jefe_brigada: $("#id_jefe_brigada_neb").val(),
+                  nro_vuelta: $("#nro_vuelta").val(),                 
+                  hora_inicio_neb: $("#hora_inicio_neb").val(),
+                  hora_termino_neb: $("#hora_termino_neb").val(),
+                  tipo_maquina_neb: $("#tipo_maquina_neb").val().toUpperCase(),
+                  insecticida_neb: $("#insecticida_neb").val().toUpperCase(),
+                  observaciones_neb: $("#observaciones_neb").val(),
+                  id_nebulizador: $("#id_nebulizador").val(),
+                  id_usuario: $("#s_id_usuario").val()
+                  //detalle: aItems
+                },
+                success: function(msg){
+                  $("#loaderModal").hide();
+                  table.ajax.reload();
+                    var amsg=msg.split('|');
+                    var nerror=amsg[0];
+                    if (nerror=='0'){
+                      bootbox.alert('Ocurrio un error: '+amsg[1]);
+                    }else{
+                      $('#modalFichaF').modal('toggle');
+                      bootbox.alert('Registro guardado');
+                    }
+
+                }
+              });
+
+        }
+      }
+
+    });
+
+}
+
+function renderMapaRuta(){
+         var map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 8,
+            center: {lat: -12.0464, lng: -77.0428},
+
+            options: {
+            gestureHandling: 'greedy'
+          },
+          styles :
+        [
+        {
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#f5f5f5"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.icon",
+        "stylers": [
+        {
+            "visibility": "off"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#616161"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.text.stroke",
+        "stylers": [
+        {
+            "color": "#f5f5f5"
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.country",
+        "elementType": "geometry.stroke",
+        "stylers": [
+        {
+            "color": "#102c5f"
+        },
+        {
+            "weight": 2
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.land_parcel",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#bdbdbd"
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.province",
+        "elementType": "geometry.stroke",
+        "stylers": [
+        {
+            "color": "#258135"
+        },
+        {
+            "saturation": 100
+        },
+        {
+            "weight": 1.5
+        }
+        ]
+        },
+        {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#eeeeee"
+        }
+        ]
+        },
+        {
+        "featureType": "poi",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#757575"
+        }
+        ]
+        },
+        {
+        "featureType": "poi.park",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#e5e5e5"
+        }
+        ]
+        },
+        {
+        "featureType": "poi.park",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        },
+        {
+        "featureType": "road",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#ffffff"
+        }
+        ]
+        },
+        {
+        "featureType": "road.arterial",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#757575"
+        }
+        ]
+        },
+        {
+        "featureType": "road.highway",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#dadada"
+        }
+        ]
+        },
+        {
+        "featureType": "road.highway",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#616161"
+        }
+        ]
+        },
+        {
+        "featureType": "road.local",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        },
+        {
+        "featureType": "transit.line",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#e5e5e5"
+        }
+        ]
+        },
+        {
+        "featureType": "transit.station",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#eeeeee"
+        }
+        ]
+        },
+        {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#c9c9c9"
+        }
+        ]
+        },
+        {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        }
+        ]
+
+
+          });
+
+
+
+
+
+
+         var directionsService = new google.maps.DirectionsService();
+         var directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map
+        });
+
+        var districtData = locationsb.map(item=>{
+            //return {  lat: item[0], lng: item[1], weight: 8 }
+            return {  lat: item[0], lng: item[1], weight: 8, color:item[2] }
+        })
+        
+        var waypoints=[];
+        i=0;
+
+        start= new google.maps.LatLng(-12.0464, -77.0428);
+        end= new google.maps.LatLng(-12.0464, -77.0428);
+
+        districtData.forEach(function (coordenada) {
+             //console.log(coordenada);    
+             
+             /*if (i==0 || (i+1)==districtData.length ){
+                //waypoints.push({ location: new google.maps.LatLng(coordenada.lat, coordenada.lng) })                
+             }*/
+             if (i==0 ){
+                start=new google.maps.LatLng(coordenada.lat, coordenada.lng);
+             }
+             if ((i+1)==districtData.length ){
+                end=new google.maps.LatLng(coordenada.lat, coordenada.lng);                
+             }
+
+             i++;   
+
+        });
+
+        
+        //console.log(waypoints);
+        
+
+
+
+        /*    // Array de coordenadas (latitud y longitud)
+            var waypoints = [
+                { location: new google.maps.LatLng(-12.0533, -77.0275) }, // Miraflores, Lima, Perú
+                { location: new google.maps.LatLng(-12.0772, -77.0326) }, // Barranco, Lima, Perú
+                { location: new google.maps.LatLng(-12.0969, -77.0262) }  // Chorrillos, Lima, Perú
+                // Puedes agregar más coordenadas aquí según tus necesidades
+                ];*/
+
+
+
+
+                var request = {
+                origin: start,    //new google.maps.LatLng(-12.0464, -77.0428), // Lima, Perú
+                destination: end, //new google.maps.LatLng(-12.0464, -77.0428), // Huacho, Lima, Perú
+                //waypoints: waypoints,
+                optimizeWaypoints: true, // Ordena los puntos para obtener la ruta más óptima
+                travelMode: 'DRIVING' // Puedes cambiar el modo de viaje (DRIVING, WALKING, TRANSIT, etc.)
+            };
+
+            directionsService.route(request, function(response, status) {
+                if (status == 'OK') {
+                    directionsRenderer.setDirections(response);
+                } else {
+                    window.alert('Error al calcular la ruta: ' + status);
+                }
+            });
+
+
+}
+
+
+function renderData(){
+
+  //var tipo=$('input[name="tiporeporte"]:checked').val();  
+  
+  /*if ($('#tipo1').is(':checked')){
+        tipo='T';
+  }else{
+        tipo='C'
+  }*/
+
+  tipo='';
+
+  id_establecimiento=$("#id_establecimiento").val();
+
+
+  var parametros = {"desde":$("#fecha_desde").val(),"tipo":tipo, "id_establecimiento": id_establecimiento};
+  $.ajax( {
+    url: '../ajax/ficha_vivienda.php?op=dataFumigacion',
+    data:  parametros,
+    dataType: 'html',
+    async: false,
+    success: function (json) {
+      $("#tbDistritos").html(json);
+
+      var tbody = document.getElementById("tbDistritos");
+
+
+        /*var sumaInsp = 0;
+        var sumaPosi = 0;
+        var totalIA = 0;
+
+        for (var i = 0; i < tbody.rows.length; i++) {
+            var celdas = tbody.rows[i].cells;
+            sumaInsp += parseInt(celdas[1].innerHTML);
+            sumaPosi += parseInt(celdas[2].innerHTML);
+        }
+        $("#td_total_insp").html(sumaInsp);
+        $("#td_total_pos").html(sumaPosi);
+        if (sumaInsp>0){
+            totalIA=parseFloat(sumaPosi/sumaInsp)*100;
+        }
+        $("#td_total_ind").html(totalIA.toFixed(3));*/
+
+    }
+  } );
+}
+
+function validarLatitud(latitud) {
+    var regex = /^-?([1-8]?\d(\.\d+)?|90(\.0+)?)$/;
+    return regex.test(latitud);
+}
+
+function validarLongitud(longitud) {
+    var regex = /^-?((1[0-7]|[1-9])?\d(\.\d+)?|180(\.0+)?)$/;
+    return regex.test(longitud);
+}
+
+
+function getData(){
+  
+    
+  id_d='';
+  locationsb=[];
+
+  id_establecimiento=$("#id_establecimiento").val();
+
+
+  $.get("../ajax/ficha_vivienda.php?op=getCoordenadasFumigacion",{desde :$("#fecha_desde").val(),id_establecimiento: id_establecimiento}, function(data, status)
+  {
+      data = JSON.parse(data);
+      //console.log(data.detalle);
+      
+      $.each(data.detalle, function( i, item ){
+        //console.log(i);
+        x1=parseFloat(item.inicio_lat);
+        y1=parseFloat(item.inicio_lon);
+
+        x2=parseFloat(item.fin_lat);
+        y2=parseFloat(item.fin_lon);
+
+
+        if (validarLatitud(x1) && validarLongitud(y1) && validarLatitud(x2) && validarLongitud(y2)   ) {
+          dat=[         
+          x1,
+          y1,
+          x2,
+          y2
+          ];
+
+          locationsb.push(dat);
+        }
+
+        
+      }); 
+
+      //console.log(locationsb);
+      renderMapaRut();    
+        
+  });
+
+}
+
+
+function renderMapaRut(){
+
+
+    var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                mapTypeId: 'roadmap',
+                //center: {lat: -12.0464, lng: -77.0428} // Centrar en Lima, Perú
+                center: { lat: -12.0545376, lng: -77.0546407 },
+                options: {
+            gestureHandling: 'greedy'
+          },
+          styles :
+        [
+        {
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#f5f5f5"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.icon",
+        "stylers": [
+        {
+            "visibility": "off"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#616161"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.text.stroke",
+        "stylers": [
+        {
+            "color": "#f5f5f5"
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.country",
+        "elementType": "geometry.stroke",
+        "stylers": [
+        {
+            "color": "#102c5f"
+        },
+        {
+            "weight": 2
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.land_parcel",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#bdbdbd"
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.province",
+        "elementType": "geometry.stroke",
+        "stylers": [
+        {
+            "color": "#258135"
+        },
+        {
+            "saturation": 100
+        },
+        {
+            "weight": 1.5
+        }
+        ]
+        },
+        {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#eeeeee"
+        }
+        ]
+        },
+        {
+        "featureType": "poi",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#757575"
+        }
+        ]
+        },
+        {
+        "featureType": "poi.park",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#e5e5e5"
+        }
+        ]
+        },
+        {
+        "featureType": "poi.park",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        },
+        {
+        "featureType": "road",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#ffffff"
+        }
+        ]
+        },
+        {
+        "featureType": "road.arterial",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#757575"
+        }
+        ]
+        },
+        {
+        "featureType": "road.highway",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#dadada"
+        }
+        ]
+        },
+        {
+        "featureType": "road.highway",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#616161"
+        }
+        ]
+        },
+        {
+        "featureType": "road.local",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        },
+        {
+        "featureType": "transit.line",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#e5e5e5"
+        }
+        ]
+        },
+        {
+        "featureType": "transit.station",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#eeeeee"
+        }
+        ]
+        },
+        {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#c9c9c9"
+        }
+        ]
+        },
+        {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        }
+        ]
+
+
+            });
+
+            // Crear el servicio de direcciones
+            var directionsService = new google.maps.DirectionsService;
+
+            // Crear un array de instancias de DirectionsRenderer para cada ruta
+            var directionsRenderers = [];
+
+            // Coordenadas de las rutas
+             var routes=[];
+
+            routes = locationsb.map(item=>{
+                //return {  lat: item[0], lng: item[1], weight: 8 }
+                return { start:{lat: item[0], lng: item[1]},end:{lat: item[2], lng: item[3]}}
+            })
+
+            console.log(routes);
+
+            /*var routes = [
+                { start: { lat: -12.0677161, lng: -77.0234229 }, end: { lat: -12.066832, lng: -77.0162308 } }, // Lima a San Isidro
+                { start: { lat: -11.9331911, lng: -76.9908523062075 }, end: { lat: -12.0073054, lng: -77.0171693 } }  // Lima a Miraflores
+                // Puedes agregar más rutas según sea necesario
+            ];*/
+
+
+            // Iterar sobre las rutas y trazar cada una
+            routes.forEach(function(route, index) {
+                var directionsRenderer = new google.maps.DirectionsRenderer({
+                    map: map,
+                    preserveViewport: true, // Mantener el zoom y la posición del mapa al mostrar la ruta
+                    //suppressMarkers: true // Suprimir los marcadores predeterminados de inicio y fin
+                });
+
+                directionsRenderers.push(directionsRenderer); // Agregar el renderizador a la lista
+
+                // Configurar la solicitud de ruta
+                var request = {
+                    origin: route.start,
+                    destination: route.end,
+                    travelMode: 'DRIVING'
+                };
+                
+
+                // Trazar la ruta
+                directionsService.route(request, function(response, status) {
+                    console.log(response);    
+                    if (status === 'OK') {
+                        directionsRenderer.setDirections(response);
+                    } else {
+                        console.error('Directions request failed due to ' + status);
+                    }
+                });
+            });
+
+
+
+}
+
+
+function renderMapa(){
+		 /*var districtData = [
+         { lat: -12.0464, lng: -77.0428, weight: 3 },
+         { lat: -12.1175, lng: -77.0299, weight: 5 },
+         { lat: -12.0654, lng: -77.0376, weight: 8 },
+          ];*/
+
+      	var districtData = locationsb.map(item=>{
+      		//return {  lat: item[0], lng: item[1], weight: 8 }
+            return {  lat: item[0], lng: item[1], weight: 8, color:item[2] }
+      	})
+
+        //console.log(districtData)
+
+        // Inicializar el mapa
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: { lat: -12.0545376, lng: -77.0546407 },
+          zoom: 12,
+          mapTypeId: 'roadmap',
+
+          options: {
+            gestureHandling: 'greedy'
+          },
+          styles :
+        [
+        {
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#f5f5f5"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.icon",
+        "stylers": [
+        {
+            "visibility": "off"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#616161"
+        }
+        ]
+        },
+        {
+        "elementType": "labels.text.stroke",
+        "stylers": [
+        {
+            "color": "#f5f5f5"
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.country",
+        "elementType": "geometry.stroke",
+        "stylers": [
+        {
+            "color": "#102c5f"
+        },
+        {
+            "weight": 2
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.land_parcel",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#bdbdbd"
+        }
+        ]
+        },
+        {
+        "featureType": "administrative.province",
+        "elementType": "geometry.stroke",
+        "stylers": [
+        {
+            "color": "#258135"
+        },
+        {
+            "saturation": 100
+        },
+        {
+            "weight": 1.5
+        }
+        ]
+        },
+        {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#eeeeee"
+        }
+        ]
+        },
+        {
+        "featureType": "poi",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#757575"
+        }
+        ]
+        },
+        {
+        "featureType": "poi.park",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#e5e5e5"
+        }
+        ]
+        },
+        {
+        "featureType": "poi.park",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        },
+        {
+        "featureType": "road",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#ffffff"
+        }
+        ]
+        },
+        {
+        "featureType": "road.arterial",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#757575"
+        }
+        ]
+        },
+        {
+        "featureType": "road.highway",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#dadada"
+        }
+        ]
+        },
+        {
+        "featureType": "road.highway",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#616161"
+        }
+        ]
+        },
+        {
+        "featureType": "road.local",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        },
+        {
+        "featureType": "transit.line",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#e5e5e5"
+        }
+        ]
+        },
+        {
+        "featureType": "transit.station",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#eeeeee"
+        }
+        ]
+        },
+        {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+        {
+            "color": "#c9c9c9"
+        }
+        ]
+        },
+        {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [
+        {
+            "color": "#9e9e9e"
+        }
+        ]
+        }
+        ]
+
+        });
+
+
+
+        // Agregar marcadores al mapa
+        districtData.forEach(function (coordenada) {
+            var marker = new google.maps.Marker({
+                position: { lat: coordenada.lat, lng: coordenada.lng },
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    fillColor: coordenada.color,
+                    fillOpacity: 1,
+                    strokeWeight: 0,
+                    scale: 3
+                }
+            });
+        });
+
+
+        /*
+        // Preparar datos para la capa de calor
+        var heatmapData = districtData.map(function (point) {
+          return new google.maps.LatLng(point.lat, point.lng, point.weight);
+        });
+
+        // Configurar capa de calor
+        var heatmap = new google.maps.visualization.HeatmapLayer({
+          data: heatmapData,
+          radius: 20 // Ajusta el radio según sea necesario
+        });
+
+        // Agregar capa de calor al mapa
+        heatmap.setMap(map);
+        */
+
+
+        /*Poligonos*/
+          let distritos=[]
+          distritos.push([-77.0112991333007,-12.0315399169922,-77.0122756958008,-12.0329885482787,-77.012840270996,-12.03635597229,-77.0130767822266,-12.0366058349609,-77.0151901245117,-12.0360412597656,-77.01708984375,-12.0348787307739,-77.0188369750976,-12.0321636199951,-77.0212478637695,-12.0292272567749,-77.0219726562499,-12.028037071228,-77.0222549438476,-12.0267791748046,-77.0221252441406,-12.025595664978,-77.0213394165039,-12.0241098403931,-77.0204544067382,-12.0231685638428,-77.01953125,-12.0209417343139,-77.0195007324218,-12.0193881988525,-77.0198745727538,-12.0169095993042,-77.0207366943359,-12.0144710540771,-77.0227203369141,-12.0116910934448,-77.0232620239258,-12.0100164413452,-77.025276184082,-12.0081043243408,-77.0254898071289,-12.0059223175049,-77.0280838012695,-12.0033378601074,-77.0291061401367,-11.9976263046265,-77.0294876098633,-11.9970731735229,-77.0305709838867,-11.9962520599364,-77.030143737793,-11.9924049377441,-77.0302658081054,-11.9860782623291,-77.0299301147461,-11.9847698211669,-77.0288238525391,-11.9827070236205,-77.0285873413086,-11.9816951751709,-77.0293655395508,-11.9755373001099,-77.0294799804688,-11.9709701538086,-77.0287933349609,-11.9684991836548,-77.0274124145507,-11.9661951065063,-77.027603149414,-11.9655246734619,-77.0285034179688,-11.9644813537598,-77.0287170410156,-11.9638805389404,-77.0286331176758,-11.9623823165893,-77.0281982421874,-11.960542678833,-77.0269317626953,-11.9581747055054,-77.0258407592773,-11.9567890167236,-77.0232467651367,-11.9543867111205,-77.0189666748047,-11.9517335891724,-77.0181808471679,-11.9507970809937,-77.0175552368164,-11.9494476318359,-77.0171127319335,-11.946249961853,-77.015998840332,-11.941813468933,-77.0161590576171,-11.9396677017211,-77.0169219970703,-11.9384174346924,-77.0200271606445,-11.9367208480835,-77.0202560424804,-11.9359416961669,-77.0194091796874,-11.9356679916382,-77.017967224121,-11.9355792999267,-77.0170364379882,-11.93581199646,-77.0159149169922,-11.9365797042847,-77.0152359008789,-11.9364681243896,-77.0136795043945,-11.9351415634154,-77.0077667236328,-11.9312334060669,-77.0066299438476,-11.930281639099,-77.0049285888671,-11.9279899597167,-77.0021438598632,-11.9252071380615,-77.0005645751953,-11.9247665405273,-76.9999008178711,-11.9242753982544,-76.9994964599609,-11.9233837127685,-76.9991760253906,-11.9209079742431,-76.9981307983398,-11.9190006256102,-76.9974212646484,-11.9183282852173,-76.995262145996,-11.9179801940917,-76.9894104003906,-11.9187088012695,-76.9882583618164,-11.9184198379517,-76.9874954223633,-11.9177379608154,-76.9873046875,-11.9173603057861,-76.9874725341796,-11.9166345596313,-76.9893035888672,-11.9142923355102,-76.9907302856445,-11.9118938446045,-76.9915924072266,-11.9093494415283,-76.9914550781249,-11.9079217910767,-76.9898071289062,-11.905647277832,-76.9891128540039,-11.9039793014526,-76.9889373779297,-11.9007539749145,-76.9893264770508,-11.8993768692017,-76.9894485473632,-11.8987073898315,-76.9892196655273,-11.8983469009399,-76.9861297607421,-11.8955135345458,-76.9837112426758,-11.8936042785645,-76.9803771972656,-11.8914051055908,-76.974723815918,-11.8864459991455,-76.9701995849609,-11.8820133209229,-76.9681167602538,-11.8791637420654,-76.9660415649414,-11.8774042129517,-76.9640426635742,-11.8752412796021,-76.9614868164062,-11.8732166290283,-76.9576797485352,-11.8713083267212,-76.9572677612305,-11.8707056045532,-76.9564437866211,-11.8684339523315,-76.9544601440429,-11.866063117981,-76.9512557983398,-11.8643560409545,-76.9472732543945,-11.8615369796753,-76.9434509277344,-11.8614091873169,-76.9425811767578,-11.8611183166504,-76.9421997070312,-11.8607301712036,-76.9410934448242,-11.8625917434692,-76.9402160644531,-11.8647480010986,-76.939582824707,-11.8656282424927,-76.9361419677734,-11.869213104248,-76.9351501464844,-11.8698444366455,-76.9341049194336,-11.8701343536377,-76.9310989379882,-11.8702363967895,-76.928123474121,-11.8706350326538,-76.9249725341797,-11.8697805404663,-76.9238815307617,-11.8691263198853,-76.9220581054688,-11.8685607910156,-76.9204025268554,-11.8676242828369,-76.9182891845703,-11.8667974472046,-76.9162673950195,-11.8656005859375,-76.9135894775391,-11.8650493621826,-76.908332824707,-11.8645591735839,-76.9054794311523,-11.8645696640014,-76.9037628173828,-11.8648166656494,-76.9004592895508,-11.8638620376587,-76.897834777832,-11.8641853332519,-76.8965072631836,-11.8640346527099,-76.895751953125,-11.8645181655883,-76.8954315185546,-11.8651523590088,-76.8954010009766,-11.8659009933471,-76.8956604003906,-11.8665599822998,-76.897087097168,-11.8680868148803,-76.8975296020507,-11.868860244751,-76.8985977172852,-11.8721170425414,-76.8988037109375,-11.8735342025756,-76.898567199707,-11.8750286102294,-76.8973388671874,-11.8769159317016,-76.8966217041016,-11.8785667419434,-76.8964462280273,-11.8795347213745,-76.8967514038085,-11.8813858032227,-76.9012298583984,-11.8831272125244,-76.9026489257812,-11.8839406967163,-76.9035568237305,-11.8848209381104,-76.9042053222656,-11.8862972259521,-76.9053497314453,-11.8872051239014,-76.9103698730469,-11.8879747390747,-76.9115753173828,-11.8883533477783,-76.9129104614258,-11.8895292282104,-76.9137191772461,-11.8916101455687,-76.9140396118163,-11.893461227417,-76.9140548706055,-11.8954410552978,-76.9145889282226,-11.8984470367432,-76.9179229736328,-11.9068508148193,-76.9179840087891,-11.9090824127196,-76.9165267944336,-11.9112434387207,-76.9162521362305,-11.9125642776489,-76.9168472290039,-11.9148206710815,-76.9180145263671,-11.9168539047241,-76.9184265136718,-11.918134689331,-76.9184112548828,-11.919038772583,-76.9176788330078,-11.920181274414,-76.9139556884766,-11.9235887527466,-76.9136505126953,-11.9245300292969,-76.9138031005859,-11.9253444671631,-76.9151763916015,-11.9270067214966,-76.9175186157227,-11.9287166595458,-76.9246444702148,-11.9314794540405,-76.9263153076171,-11.9323997497557,-76.9276580810546,-11.933482170105,-76.9287033081054,-11.9347400665282,-76.9290618896484,-11.9375867843627,-76.931297302246,-11.9420356750487,-76.9331436157227,-11.9440212249756,-76.9354019165038,-11.9470796585082,-76.9382324218749,-11.9488763809204,-76.9412002563476,-11.9516563415527,-76.9420471191406,-11.9519929885864,-76.9432220458984,-11.952112197876,-76.9467468261718,-11.9517021179199,-76.9484710693358,-11.9517965316772,-76.9495010375976,-11.9525222778319,-76.9507446289062,-11.9540767669677,-76.9518280029297,-11.9563646316527,-76.9521942138672,-11.9584140777588,-76.9521026611328,-11.9592914581299,-76.9511413574218,-11.9608249664307,-76.9507598876952,-11.9624214172363,-76.9534225463867,-11.9692974090576,-76.9546508789062,-11.9716100692749,-76.957633972168,-11.9755687713623,-76.9589157104492,-11.9799489974975,-76.960578918457,-11.9817285537719,-76.9622268676758,-11.9839859008788,-76.9643020629882,-11.9877758026123,-76.9663543701172,-11.9925622940063,-76.9674606323242,-11.9936380386352,-76.9703903198242,-11.9952812194824,-76.9709167480469,-11.9957847595214,-76.9710998535156,-11.9978427886962,-76.9694137573242,-12.0007314682006,-76.9688339233398,-12.0024785995483,-76.9681701660156,-12.0033521652222,-76.9673309326171,-12.0041418075562,-76.9663543701172,-12.0046367645263,-76.9639739990234,-12.0051164627075,-76.9612426757812,-12.0063171386719,-76.9555053710937,-12.0111141204833,-76.9539260864258,-12.013726234436,-76.9526443481445,-12.0184803009033,-76.9526596069335,-12.0195837020874,-76.9535446166992,-12.0217189788818,-76.9561996459961,-12.0229930877686,-76.960105895996,-12.0238523483276,-76.9647750854492,-12.0259609222412,-76.9670181274414,-12.0265941619873,-76.9725036621093,-12.0262594223022,-76.9743347167969,-12.0259218215942,-76.9769744873046,-12.0259380340576,-76.980354309082,-12.0249280929565,-76.9814682006835,-12.0248479843139,-76.9878387451171,-12.0256156921387,-76.9932479858398,-12.0257120132446,-76.9963073730469,-12.0260715484619,-77.0007553100586,-12.0270681381225,-77.0042114257812,-12.0288801193237,-77.0086822509766,-12.0295248031616,-77.0103607177734,-12.0305347442627,-77.0112991333007,-12.0315399169922])
+          distritos.push([-77.0783538818359,-12.0689544677734,-77.0784530639648,-12.0622653961182,-77.078857421875,-12.0601196289062,-77.0829696655273,-12.0611276626587,-77.0880737304687,-12.061650276184,-77.0878219604492,-12.0516099929809,-77.0875091552734,-12.0513591766357,-77.0780944824219,-12.0500030517578,-77.078254699707,-12.0475435256958,-77.0785903930664,-12.0464839935302,-77.0813598632812,-12.0467796325684,-77.0819625854492,-12.0465478897094,-77.082534790039,-12.043740272522,-77.0829772949219,-12.0395193099976,-77.0827178955078,-12.039267539978,-77.0811386108398,-12.0391159057616,-77.0813217163086,-12.0359249114989,-77.0796966552733,-12.035701751709,-77.0778198242188,-12.0351295471191,-77.0762405395507,-12.035005569458,-77.0744552612305,-12.0344495773315,-77.0713882446288,-12.0342178344726,-77.0693283081055,-12.0348043441771,-77.066909790039,-12.0345783233642,-77.0654296875,-12.0347146987915,-77.0603408813477,-12.0359001159668,-77.055305480957,-12.0358839035034,-77.0531234741211,-12.0363512039184,-77.0507049560546,-12.0364580154418,-77.0476150512695,-12.0371875762939,-77.0449676513671,-12.0385093688964,-77.0436401367187,-12.0384178161621,-77.0431900024414,-12.038122177124,-77.0428466796875,-12.0383501052856,-77.0406036376953,-12.0383682250977,-77.0369415283203,-12.0397424697876,-77.0350952148438,-12.0399732589722,-77.031364440918,-12.0416707992553,-77.0297012329101,-12.042197227478,-77.0260772705078,-12.0425596237183,-77.0220413208008,-12.0436811447144,-77.0196228027344,-12.0438451766967,-77.0165100097656,-12.0432338714599,-77.0152359008789,-12.0424480438232,-77.0139389038086,-12.0412473678589,-77.0131225585937,-12.0396966934204,-77.0130767822266,-12.0366058349609,-77.012840270996,-12.03635597229,-77.0122756958008,-12.0329885482787,-77.0112991333007,-12.0315399169922,-77.0088958740234,-12.0338525772095,-77.0077896118163,-12.0357494354248,-77.006736755371,-12.0370492935181,-77.0046920776367,-12.0404558181762,-77.0037078857422,-12.0431003570557,-77.0032196044922,-12.046944618225,-77.0063018798828,-12.049843788147,-77.0073089599609,-12.0492010116576,-77.0081100463867,-12.047758102417,-77.0081176757812,-12.0466566085815,-77.0078735351562,-12.0462703704834,-77.0075149536133,-12.0439043045043,-77.0084075927734,-12.0434103012085,-77.0088424682617,-12.0435419082642,-77.0097503662109,-12.047212600708,-77.0107192993163,-12.0496110916137,-77.0112991333007,-12.0518665313721,-77.0111846923828,-12.0530338287354,-77.0102310180664,-12.0546321868896,-77.0075073242188,-12.0568542480468,-77.0056228637695,-12.0596008300781,-77.0059814453125,-12.0598669052123,-77.0107650756836,-12.0608539581299,-77.0137176513672,-12.061014175415,-77.0143280029297,-12.0608196258545,-77.0147552490234,-12.0603914260864,-77.0162658691406,-12.0576343536376,-77.0170822143555,-12.0572576522827,-77.0181121826172,-12.0571603775024,-77.0256881713867,-12.0583696365356,-77.0353240966796,-12.0594091415404,-77.0352401733398,-12.0602426528931,-77.0335235595703,-12.0633201599121,-77.0312347412109,-12.070629119873,-77.027961730957,-12.0779838562012,-77.0279541015625,-12.07861328125,-77.0318450927734,-12.0789318084716,-77.0355529785156,-12.0803251266479,-77.036750793457,-12.0804958343506,-77.0372924804688,-12.0803203582764,-77.0381546020508,-12.0755958557129,-77.038330078125,-12.0728378295898,-77.0381393432617,-12.069613456726,-77.0371475219726,-12.0651912689208,-77.0371780395508,-12.0642795562744,-77.0375823974609,-12.0640840530396,-77.0445098876953,-12.0651178359985,-77.0454406738281,-12.0650043487548,-77.0448837280273,-12.0640487670898,-77.0422439575195,-12.0614576339722,-77.04150390625,-12.060170173645,-77.0411911010742,-12.0582647323607,-77.0410842895508,-12.0550651550293,-77.0412750244141,-12.0532579421996,-77.0417709350586,-12.0514459609984,-77.042381286621,-12.050401687622,-77.0431976318359,-12.0499439239501,-77.0447235107422,-12.0498247146605,-77.0492095947266,-12.0502166748047,-77.0515594482421,-12.0496292114258,-77.052864074707,-12.0490140914916,-77.0550308227539,-12.0512037277221,-77.0569305419922,-12.0537109374999,-77.0578079223633,-12.0552310943604,-77.0588073730468,-12.0599355697632,-77.0598983764648,-12.0627822875977,-77.0603713989258,-12.0648593902588,-77.0608367919922,-12.0658664703368,-77.0608444213867,-12.0665817260741,-77.0616149902344,-12.0669097900391,-77.065574645996,-12.0674772262573,-77.0783538818359,-12.0689544677734])
+          distritos.push([-77.0096282958984,-12.0888900756835,-77.0106048583984,-12.0892162322997,-77.0169982910156,-12.0900201797485,-77.0175018310546,-12.0902624130249,-77.022590637207,-12.0908107757568,-77.0271835327148,-12.0798778533935,-77.0279541015625,-12.07861328125,-77.027961730957,-12.0779838562012,-77.0312347412109,-12.070629119873,-77.0335235595703,-12.0633201599121,-77.0352401733398,-12.0602426528931,-77.0353240966796,-12.0594091415404,-77.0256881713867,-12.0583696365356,-77.0181121826172,-12.0571603775024,-77.0170822143555,-12.0572576522827,-77.0162658691406,-12.0576343536376,-77.0147552490234,-12.0603914260864,-77.0143280029297,-12.0608196258545,-77.0137176513672,-12.061014175415,-77.0107650756836,-12.0608539581299,-77.0059814453125,-12.0598669052123,-77.0056228637695,-12.0596008300781,-77.0020904541016,-12.0626163482665,-77.0008926391601,-12.0625886917114,-77.0003967285156,-12.0627727508545,-76.9979019165039,-12.0655126571654,-76.9962768554688,-12.0679540634155,-77.0042114257812,-12.0727787017822,-77.0067977905273,-12.0740623474121,-77.0084609985352,-12.0754127502441,-77.0095672607421,-12.0768966674805,-77.0096130371094,-12.0782690048217,-77.0087432861327,-12.0796775817871,-77.0048446655273,-12.0811786651611,-77.0051727294922,-12.0841770172118,-77.0084915161133,-12.0848760604858,-77.0089950561523,-12.0860843658446,-77.0096282958984,-12.0888900756835])//la victoria
+          distritos.push([-77.0717849731445,-12.0837411880493,-77.0729141235351,-12.0854320526123,-77.0749359130859,-12.085789680481,-77.0741882324219,-12.0872974395751,-77.0741653442382,-12.0878276824951,-77.0752410888672,-12.090313911438,-77.0780334472656,-12.0952653884888,-77.0786132812499,-12.096248626709,-77.0787506103516,-12.096248626709,-77.0787506103516,-12.0959711074829,-77.0793075561523,-12.0959711074829,-77.0793075561523,-12.0956945419312,-77.0795822143554,-12.0956945419312,-77.0795822143554,-12.0954151153564,-77.0801391601562,-12.0954170227051,-77.0801391601562,-12.0951385498047,-77.0804138183594,-12.0951385498047,-77.0804138183594,-12.0948610305786,-77.0809707641602,-12.0948610305786,-77.0809707641602,-12.0945825576782,-77.0815277099609,-12.0945825576782,-77.0815277099609,-12.0943050384521,-77.0820846557617,-12.0943050384521,-77.0820846557617,-12.0940265655518,-77.0823593139648,-12.0940265655518,-77.0823593139648,-12.0937490463257,-77.0829162597656,-12.0937490463257,-77.0829162597656,-12.0934734344482,-77.0834732055664,-12.0934734344482,-77.0834732055664,-12.0931930541991,-77.0840301513672,-12.0931949615479,-77.0840301513672,-12.0929174423218,-77.0843048095703,-12.0929174423218,-77.0843048095703,-12.0926389694214,-77.0848617553711,-12.0926389694214,-77.0848617553711,-12.0923614501953,-77.0854187011718,-12.0923614501953,-77.0854187011718,-12.0920829772949,-77.0859756469726,-12.0920829772949,-77.0859756469726,-12.0918054580688,-77.0865249633789,-12.0918054580688,-77.0865249633789,-12.0915269851685,-77.0870819091797,-12.091528892517,-77.0870819091797,-12.091251373291,-77.0876388549805,-12.091251373291,-77.0876388549805,-12.090970993042,-77.0884704589843,-12.0909729003906,-77.0884704589843,-12.0906953811646,-77.0890274047851,-12.0906953811646,-77.0890274047851,-12.0904169082641,-77.0895843505859,-12.0904169082641,-77.0895843505859,-12.0901393890381,-77.0901412963867,-12.0901393890381,-77.0901412963867,-12.0898609161377,-77.090690612793,-12.0898609161377,-77.0906982421875,-12.0895833969116,-77.0912475585938,-12.0895833969116,-77.0912475585938,-12.0893068313597,-77.0918045043945,-12.0893068313597,-77.0918045043945,-12.0890274047852,-77.0923614501953,-12.0890274047852,-77.0923614501953,-12.0887508392333,-77.092918395996,-12.0887508392333,-77.092918395996,-12.0884733200073,-77.0934753417969,-12.0884733200073,-77.0934753417969,-12.0881948471069,-77.0940246582031,-12.0881948471069,-77.0940246582031,-12.0879173278808,-77.0945816040039,-12.0879173278808,-77.0945816040039,-12.0876388549804,-77.0951385498046,-12.0876388549804,-77.0951385498046,-12.08736038208,-77.0956954956054,-12.08736038208,-77.0956954956054,-12.0870819091796,-77.0962524414062,-12.0870819091796,-77.0962524414062,-12.0868043899536,-77.0968017578125,-12.0868043899536,-77.0968017578125,-12.0865287780762,-77.0970840454102,-12.0865287780762,-77.0970840454102,-12.08625125885,-77.0976409912109,-12.08625125885,-77.0976409912109,-12.0859718322754,-77.0981979370116,-12.0859718322754,-77.0981979370116,-12.0856943130493,-77.0987472534179,-12.0856943130493,-77.0987472534179,-12.0854158401489,-77.0995864868164,-12.0854158401489,-77.0995864868164,-12.0851383209229,-77.1004180908203,-12.0851383209229,-77.1004180908203,-12.0848598480225,-77.1012496948241,-12.0848598480225,-77.1012496948241,-12.0845823287963,-77.1020812988281,-12.0845823287963,-77.1020812988281,-12.0843057632446,-77.1026382446289,-12.0843057632446,-77.1026382446289,-12.0840282440186,-77.1028518676757,-12.0840282440186,-77.1031951904297,-12.0840282440186,-77.1031951904297,-12.0839138031006,-77.1031951904297,-12.0837497711182,-77.1034698486328,-12.0837497711182,-77.1034698486328,-12.0834722518921,-77.1040267944336,-12.0834722518921,-77.1040267944336,-12.0831937789917,-77.104377746582,-12.0831937789917,-77.1045837402343,-12.0831937789917,-77.1045837402343,-12.0830574035644,-77.1045837402343,-12.0829162597656,-77.1048049926758,-12.0829162597656,-77.1051406860351,-12.0829162597656,-77.1051406860351,-12.0826377868652,-77.1059722900391,-12.0826377868652,-77.1059722900391,-12.0823602676392,-77.1065292358398,-12.0823621749877,-77.1065292358398,-12.0820837020873,-77.1070861816406,-12.0820837020873,-77.1070861816406,-12.0818147659302,-77.1076354980468,-12.0818061828613,-77.1076354980468,-12.0817012786864,-77.1076354980468,-12.0815277099609,-77.1084747314453,-12.0815277099609,-77.1084747314453,-12.0812482833861,-77.1090240478516,-12.0812501907349,-77.1090240478516,-12.0809717178344,-77.1093521118163,-12.0809717178344,-77.1095809936523,-12.0809717178344,-77.1095809936523,-12.0807867050171,-77.1095809936523,-12.0806941986084,-77.1097412109375,-12.0807600021362,-77.1100921630859,-12.0803661346434,-77.111083984375,-12.0794515609741,-77.11083984375,-12.0786247253418,-77.1108627319335,-12.0774030685424,-77.1089706420898,-12.0770473480225,-77.1092071533203,-12.0746040344238,-77.1090698242186,-12.0738201141357,-77.108657836914,-12.0736150741576,-77.1071472167968,-12.0735902786255,-77.1067962646484,-12.0730409622192,-77.1070861816406,-12.0708436965942,-77.1089096069336,-12.0698795318604,-77.1111679077147,-12.0690431594849,-77.1108322143555,-12.0685644149779,-77.1088333129883,-12.0670690536499,-77.108299255371,-12.0663881301879,-77.1081008911132,-12.0654487609863,-77.1081848144531,-12.0634336471558,-77.0880737304687,-12.061650276184,-77.0829696655273,-12.0611276626587,-77.078857421875,-12.0601196289062,-77.0784530639648,-12.0622653961182,-77.0783538818359,-12.0689544677734,-77.0785903930664,-12.0695486068726,-77.0793151855468,-12.0755863189697,-77.0798950195312,-12.0782690048217,-77.0712203979492,-12.0812425613403,-77.0709381103516,-12.081706047058,-77.0717773437499,-12.0832653045654,-77.0717849731445,-12.0837411880493])//san miguel
+          distritos.push([-77.0372924804688,-12.0803203582764,-77.0376739501953,-12.0806074142456,-77.0398178100585,-12.0806074142456,-77.0417327880859,-12.0809288024902,-77.0446014404296,-12.0820360183715,-77.0464401245117,-12.083306312561,-77.0487747192382,-12.0854597091675,-77.0491714477538,-12.0865859985351,-77.0496597290039,-12.0868453979492,-77.051887512207,-12.0912208557129,-77.0530548095703,-12.0930376052856,-77.0623321533203,-12.0869045257568,-77.0629882812499,-12.0862483978271,-77.0500717163086,-12.0703563690186,-77.0461578369141,-12.0655946731567,-77.0454406738281,-12.0650043487548,-77.0445098876953,-12.0651178359985,-77.0375823974609,-12.0640840530396,-77.0371780395508,-12.0642795562744,-77.0371475219726,-12.0651912689208,-77.0381393432617,-12.069613456726,-77.038330078125,-12.0728378295898,-77.0381546020508,-12.0755958557129,-77.0372924804688,-12.0803203582764])//jessus maria
+          distritos.push([-77.0023574829102,-12.1261081695556,-77.007080078125,-12.1188879013061,-77.008415222168,-12.1173334121704,-77.0093231201172,-12.1167020797729,-77.010498046875,-12.1166496276854,-77.0120315551758,-12.1170616149902,-77.0146331787109,-12.1196031570434,-77.0179061889648,-12.120680809021,-77.0222778320312,-12.120488166809,-77.0238037109374,-12.1198949813843,-77.0245208740234,-12.1193122863769,-77.0255355834961,-12.1190967559814,-77.0260009765624,-12.1177034378051,-77.0258712768555,-12.1091079711913,-77.0270538330077,-12.1059169769287,-77.0270919799805,-12.1031503677368,-77.0266952514648,-12.1029195785522,-77.0186157226562,-12.1019582748413,-77.0177993774413,-12.1025047302246,-77.0164566040038,-12.1039533615112,-77.0142517089843,-12.1081438064575,-77.0105972290039,-12.1070680618286,-77.0103149414062,-12.1074666976928,-77.0092086791992,-12.1121845245361,-77.0089645385742,-12.1125564575195,-77.0042419433593,-12.1121568679809,-76.9993896484374,-12.1113691329955,-76.9943618774414,-12.1108808517455,-76.9937133789062,-12.1110038757324,-76.9939956665039,-12.1122579574585,-76.9969711303711,-12.1177940368651,-76.9976501464843,-12.1196174621582,-76.9985656738281,-12.1205396652221,-77.0000305175781,-12.1231155395507,-77.0023574829102,-12.1261081695556])//surquillo
+          distritos.push([-77.0500717163086,-12.0703563690186,-77.052360534668,-12.0685873031616,-77.0543289184569,-12.0659408569336,-77.0599212646484,-12.0666961669922,-77.0608444213867,-12.0665817260741,-77.0608367919922,-12.0658664703368,-77.0603713989258,-12.0648593902588,-77.0598983764648,-12.0627822875977,-77.0588073730468,-12.0599355697632,-77.0578079223633,-12.0552310943604,-77.0569305419922,-12.0537109374999,-77.0550308227539,-12.0512037277221,-77.052864074707,-12.0490140914916,-77.0515594482421,-12.0496292114258,-77.0492095947266,-12.0502166748047,-77.0447235107422,-12.0498247146605,-77.0431976318359,-12.0499439239501,-77.042381286621,-12.050401687622,-77.0417709350586,-12.0514459609984,-77.0412750244141,-12.0532579421996,-77.0410842895508,-12.0550651550293,-77.0411911010742,-12.0582647323607,-77.04150390625,-12.060170173645,-77.0422439575195,-12.0614576339722,-77.0448837280273,-12.0640487670898,-77.0454406738281,-12.0650043487548,-77.0461578369141,-12.0655946731567,-77.0500717163086,-12.0703563690186])//breña
+          distritos.push([-77.0056228637695,-12.0596008300781,-77.0022277832031,-12.0594615936279,-77.0004272460937,-12.0607042312622,-76.9993057250977,-12.0599536895751,-76.9974060058594,-12.0606422424316,-76.9972457885742,-12.0623903274536,-76.9963531494141,-12.0633363723754,-76.9935836791992,-12.0636615753173,-76.9875793457031,-12.0635871887207,-76.9877548217773,-12.0642995834351,-76.9891662597656,-12.0665130615234,-76.9897537231445,-12.067982673645,-76.9903411865234,-12.0704107284546,-76.9908752441406,-12.0743370056152,-76.9906997680663,-12.075098991394,-76.9900360107421,-12.0762434005737,-76.9869384765625,-12.0796804428101,-76.9862670898438,-12.0807418823242,-76.9894714355468,-12.0824556350708,-76.9926986694335,-12.0819339752197,-76.9937210083008,-12.0819816589355,-76.9968414306641,-12.084156036377,-76.9994277954102,-12.0852136611938,-77.0004348754882,-12.0850791931152,-77.0019836425781,-12.0839385986327,-77.0044937133789,-12.0842895507812,-77.0051727294922,-12.0841770172118,-77.0048446655273,-12.0811786651611,-77.0087432861327,-12.0796775817871,-77.0096130371094,-12.0782690048217,-77.0095672607421,-12.0768966674805,-77.0084609985352,-12.0754127502441,-77.0067977905273,-12.0740623474121,-77.0042114257812,-12.0727787017822,-76.9962768554688,-12.0679540634155,-76.9979019165039,-12.0655126571654,-77.0003967285156,-12.0627727508545,-77.0008926391601,-12.0625886917114,-77.0020904541016,-12.0626163482665,-77.0056228637695,-12.0596008300781])//breña
+          distritos.push([-77.0105972290039,-12.1070680618286,-77.0105438232421,-12.1065435409546,-77.0125350952148,-12.0992097854614,-77.0109252929687,-12.0958414077759,-77.0070648193359,-12.089015007019,-77.0073165893555,-12.0887889862061,-77.0096282958984,-12.0888900756835,-77.0089950561523,-12.0860843658446,-77.0084915161133,-12.0848760604858,-77.0051727294922,-12.0841770172118,-77.0044937133789,-12.0842895507812,-77.0019836425781,-12.0839385986327,-77.0004348754882,-12.0850791931152,-76.9994277954102,-12.0852136611938,-76.9968414306641,-12.084156036377,-76.9937210083008,-12.0819816589355,-76.9926986694335,-12.0819339752197,-76.9894714355468,-12.0824556350708,-76.9862670898438,-12.0807418823242,-76.9836654663086,-12.0836086273192,-76.9824981689453,-12.0842037200928,-76.9812469482421,-12.0844202041625,-76.9810104370117,-12.0897741317749,-76.9802017211913,-12.0945777893066,-76.9782409667969,-12.1095590591431,-76.9801330566405,-12.1098899841309,-76.9929809570312,-12.1107654571533,-76.9937133789062,-12.1110038757324,-76.9943618774414,-12.1108808517455,-76.9993896484374,-12.1113691329955,-77.0042419433593,-12.1121568679809,-77.0089645385742,-12.1125564575195,-77.0092086791992,-12.1121845245361,-77.0103149414062,-12.1074666976928,-77.0105972290039,-12.1070680618286])//san luis
+          distritos.push([-77.0023574829102,-12.1261081695556,-77.0009384155273,-12.1282138824462,-77.0011215209961,-12.1284208297729,-77.0055084228516,-12.1281547546386,-77.0090255737304,-12.1275329589844,-77.0098648071288,-12.1278238296508,-77.0117263793945,-12.1293382644653,-77.0124740600586,-12.1296405792236,-77.0128936767578,-12.1294288635253,-77.0139007568359,-12.1282567977905,-77.0141830444336,-12.1282072067261,-77.0155334472656,-12.1290302276611,-77.0176391601562,-12.1298208236694,-77.0176696777344,-12.1316900253295,-77.019676208496,-12.1315212249756,-77.0206604003906,-12.133448600769,-77.0213317871093,-12.1342306137085,-77.0252990722656,-12.1364603042603,-77.0259933471679,-12.137451171875,-77.0273208618163,-12.1407127380371,-77.0282135009766,-12.1418066024779,-77.0284729003906,-12.1418066024779,-77.0284729003906,-12.1414690017699,-77.0284729003906,-12.1409702301025,-77.0288162231445,-12.1409730911254,-77.0290298461913,-12.1409730911254,-77.0290298461913,-12.1406602859497,-77.0290298461913,-12.1400785446166,-77.0290298461913,-12.1393041610717,-77.0293045043945,-12.1393041610717,-77.0293045043945,-12.1373615264892,-77.0295867919922,-12.1373615264892,-77.0295867919922,-12.1362495422363,-77.0298614501953,-12.1362495422363,-77.0298614501953,-12.1356935501099,-77.0301361083984,-12.1356935501099,-77.0301361083984,-12.1348600387573,-77.0306930541992,-12.1348600387573,-77.0306930541992,-12.1343059539794,-77.0309753417969,-12.1343059539794,-77.0309753417969,-12.133749961853,-77.0315246582031,-12.133749961853,-77.0315246582031,-12.133472442627,-77.0318069458007,-12.133472442627,-77.0318069458007,-12.1331939697266,-77.0320816040038,-12.1331939697266,-77.0320816040038,-12.1329164505005,-77.0326385498047,-12.1329164505005,-77.0326385498047,-12.1326379776001,-77.0329132080078,-12.1326398849487,-77.0329132080078,-12.1323623657226,-77.0337524414062,-12.1323623657226,-77.0337524414062,-12.1320819854736,-77.0343017578124,-12.1320838928222,-77.0343017578124,-12.1318063735961,-77.0345840454101,-12.1318063735961,-77.0345840454101,-12.1315279006957,-77.0351409912109,-12.1315279006957,-77.0351409912109,-12.1312503814697,-77.035415649414,-12.1312503814697,-77.035415649414,-12.1309719085693,-77.0356979370117,-12.1309719085693,-77.0356979370117,-12.1306943893433,-77.036247253418,-12.1306943893433,-77.036247253418,-12.1304178237915,-77.0365295410156,-12.1304178237915,-77.0365295410156,-12.1301403045654,-77.0368041992188,-12.1301383972168,-77.0368041992188,-12.1298618316649,-77.0370864868164,-12.1298618316649,-77.0370864868164,-12.1293058395385,-77.0373611450195,-12.1293058395385,-77.0373611450195,-12.128472328186,-77.0376358032226,-12.128472328186,-77.0376358032226,-12.1281957626343,-77.0381927490234,-12.1281957626343,-77.0381927490234,-12.1276397705078,-77.038475036621,-12.1276397705078,-77.038475036621,-12.1273622512817,-77.0390243530273,-12.1273622512817,-77.0390243530273,-12.1270837783813,-77.039306640625,-12.1270837783813,-77.039306640625,-12.1262493133545,-77.0395812988281,-12.1262493133545,-77.0395812988281,-12.1259708404541,-77.0398635864258,-12.1259708404541,-77.0398635864258,-12.125693321228,-77.0401382446289,-12.125693321228,-77.0401382446289,-12.1251373291014,-77.0415267944335,-12.1251392364502,-77.0415267944335,-12.1248607635498,-77.0440292358397,-12.1248607635498,-77.0440292358397,-12.1245832443237,-77.0445861816406,-12.1245832443237,-77.0445861816406,-12.1243047714233,-77.0451354980469,-12.1243047714233,-77.0451354980469,-12.1237487792969,-77.0459747314453,-12.1237487792969,-77.0459747314453,-12.123194694519,-77.0465240478516,-12.123194694519,-77.0465240478516,-12.1229152679443,-77.0468063354492,-12.1229152679443,-77.0468063354492,-12.1218032836913,-77.0470809936522,-12.12180519104,-77.0470809936522,-12.1206951141357,-77.0473632812499,-12.1206951141357,-77.0473632812499,-12.1201391220092,-77.0479202270507,-12.1201391220092,-77.0479202270507,-12.1198606491088,-77.0487518310547,-12.1198606491088,-77.0487518310547,-12.1195831298828,-77.0493087768555,-12.1195831298828,-77.0493087768555,-12.1193046569824,-77.0495834350586,-12.1193046569824,-77.0495834350586,-12.1187486648559,-77.0501403808594,-12.1187486648559,-77.0501403808594,-12.1184711456299,-77.0506973266601,-12.1184730529785,-77.0506973266601,-12.1176385879517,-77.0509719848632,-12.1176385879517,-77.0509719848632,-12.1173610687255,-77.0512466430663,-12.1173610687255,-77.0512466430663,-12.1170825958251,-77.051528930664,-12.1170825958251,-77.051528930664,-12.1165266036987,-77.0518035888672,-12.1165266036987,-77.0518035888672,-12.1159734725952,-77.0520858764648,-12.1159734725952,-77.0520858764648,-12.1156921386718,-77.052360534668,-12.1156921386718,-77.052360534668,-12.1151390075684,-77.0526351928711,-12.1151390075684,-77.0526351928711,-12.1145820617676,-77.0529174804688,-12.1145820617676,-77.0529174804688,-12.1143035888672,-77.0531921386719,-12.1143035888672,-77.0531921386719,-12.113751411438,-77.0534744262695,-12.113751411438,-77.0534744262695,-12.1131944656372,-77.0543060302734,-12.1131944656372,-77.0543060302734,-12.1129159927368,-77.0545806884765,-12.1129159927368,-77.0545806884765,-12.1126384735107,-77.0548629760742,-12.1126384735107,-77.0548629760742,-12.1123600006104,-77.0551376342773,-12.1123600006104,-77.0551376342773,-12.1120853424072,-77.0556945800781,-12.1120853424072,-77.0556945800781,-12.1118040084839,-77.0559692382812,-12.1118059158325,-77.0559692382812,-12.1115283966064,-77.0568084716796,-12.1115283966064,-77.0568084716796,-12.1112480163574,-77.0573577880859,-12.111249923706,-77.0573577880859,-12.1109724044799,-77.0576400756835,-12.1109724044799,-77.0576400756835,-12.1104164123535,-77.0581970214844,-12.1104164123535,-77.0581970214844,-12.1101379394531,-77.0587463378906,-12.1101379394531,-77.0587463378906,-12.1098623275757,-77.0593032836914,-12.1098623275757,-77.0593032836914,-12.1093063354491,-77.0598602294921,-12.1093063354491,-77.0598602294921,-12.1090278625488,-77.0601425170898,-12.1090278625488,-77.0601425170898,-12.1087503433227,-77.0604171752929,-12.1087503433227,-77.0604171752929,-12.1084718704222,-77.0609741210937,-12.1084718704222,-77.0609741210937,-12.1081943511962,-77.0612487792969,-12.1081943511962,-77.0603332519531,-12.1066741943359,-77.0582427978516,-12.103175163269,-77.0552978515625,-12.1064958572388,-77.0537109375,-12.1079273223876,-77.0517807006836,-12.1075353622436,-77.0507736206054,-12.1076326370239,-77.0488891601562,-12.1086683273315,-77.0469589233398,-12.1104183197021,-77.0460662841797,-12.1106672286987,-77.0451583862304,-12.1104574203491,-77.042610168457,-12.1092901229858,-77.0405807495117,-12.1099672317504,-77.0392227172852,-12.1091632843016,-77.0386734008788,-12.1090669631958,-77.036979675293,-12.110068321228,-77.0365295410156,-12.1100950241089,-77.0353240966796,-12.1089029312134,-77.0325469970703,-12.1049365997314,-77.0310897827148,-12.1034221649169,-77.029800415039,-12.1030502319336,-77.0270919799805,-12.1031503677368,-77.0270538330077,-12.1059169769287,-77.0258712768555,-12.1091079711913,-77.0260009765624,-12.1177034378051,-77.0255355834961,-12.1190967559814,-77.0245208740234,-12.1193122863769,-77.0238037109374,-12.1198949813843,-77.0222778320312,-12.120488166809,-77.0179061889648,-12.120680809021,-77.0146331787109,-12.1196031570434,-77.0120315551758,-12.1170616149902,-77.010498046875,-12.1166496276854,-77.0093231201172,-12.1167020797729,-77.008415222168,-12.1173334121704,-77.007080078125,-12.1188879013061,-77.0023574829102,-12.1261081695556])//san borj
+          distritos.push([-77.0629882812499,-12.0862483978271,-77.0711975097656,-12.0840902328491,-77.0717849731445,-12.0837411880493,-77.0717773437499,-12.0832653045654,-77.0709381103516,-12.081706047058,-77.0712203979492,-12.0812425613403,-77.0798950195312,-12.0782690048217,-77.0793151855468,-12.0755863189697,-77.0785903930664,-12.0695486068726,-77.0783538818359,-12.0689544677734,-77.065574645996,-12.0674772262573,-77.0616149902344,-12.0669097900391,-77.0608444213867,-12.0665817260741,-77.0599212646484,-12.0666961669922,-77.0543289184569,-12.0659408569336,-77.052360534668,-12.0685873031616,-77.0500717163086,-12.0703563690186,-77.0629882812499,-12.0862483978271])
+          distritos.push([-77.0530548095703,-12.0930376052856,-77.0531539916992,-12.0935802459717,-77.057991027832,-12.1023368835449,-77.0582427978516,-12.103175163269,-77.0603332519531,-12.1066741943359,-77.0612487792969,-12.1081943511962,-77.0612487792969,-12.1079158782958,-77.0618057250977,-12.1079158782958,-77.0618057250977,-12.1073598861694,-77.0620803833008,-12.1073598861694,-77.0620803833008,-12.107084274292,-77.0626373291016,-12.107084274292,-77.0626373291016,-12.1068058013916,-77.0629196166992,-12.1068058013916,-77.0629196166992,-12.1065282821655,-77.0634689331054,-12.1065282821655,-77.0634689331054,-12.1059722900389,-77.0640258789062,-12.1059722900389,-77.0640258789062,-12.1056938171387,-77.0643081665038,-12.1056938171387,-77.0643081665038,-12.1051378250121,-77.0648574829102,-12.1051378250121,-77.0648574829102,-12.1048603057861,-77.0654144287109,-12.1048622131348,-77.0654144287109,-12.1045837402344,-77.0656967163086,-12.1045837402344,-77.0656967163086,-12.1040277481079,-77.0665283203124,-12.1040277481079,-77.0665283203124,-12.1037502288818,-77.0673599243163,-12.1037502288818,-77.0673599243163,-12.1034717559814,-77.0676422119141,-12.1034717559814,-77.0676422119141,-12.1031913757324,-77.0679168701172,-12.1031942367554,-77.0679168701172,-12.1029176712036,-77.0690307617188,-12.1029176712036,-77.0690307617188,-12.1026382446289,-77.0695800781249,-12.1026401519775,-77.0695800781249,-12.1023616790771,-77.0698623657226,-12.1023616790771,-77.0698623657226,-12.1020812988281,-77.0701370239257,-12.1020841598511,-77.0701370239257,-12.1018056869507,-77.0709686279297,-12.1018056869507,-77.0709686279297,-12.1015281677246,-77.0712509155273,-12.1015281677246,-77.0712509155273,-12.1012496948242,-77.0718078613281,-12.1012496948242,-77.0718078613281,-12.1009712219238,-77.0723648071289,-12.1009712219238,-77.0723648071289,-12.1006956100463,-77.0726394653319,-12.1006956100463,-77.0726394653319,-12.0998592376709,-77.0731964111328,-12.0998620986938,-77.0731964111328,-12.099582672119,-77.0734710693359,-12.099582672119,-77.0734710693359,-12.0993032455444,-77.0740280151367,-12.099305152893,-77.0740280151367,-12.0990266799926,-77.0743026733398,-12.0990266799926,-77.0743026733398,-12.0987491607665,-77.0748596191406,-12.0987491607665,-77.0748596191406,-12.0984735488892,-77.0754165649414,-12.0984735488892,-77.0754165649414,-12.0979166030884,-77.0759735107421,-12.0979166030884,-77.0759735107421,-12.0976371765136,-77.0762481689453,-12.0976390838623,-77.0762481689453,-12.0973606109619,-77.076805114746,-12.0973606109619,-77.076805114746,-12.0970830917358,-77.0770797729492,-12.0970830917358,-77.0770797729492,-12.0968046188354,-77.0779190063477,-12.0968046188354,-77.0779190063477,-12.0965270996093,-77.0781936645508,-12.0965270996093,-77.0781936645508,-12.096248626709,-77.0786132812499,-12.096248626709,-77.0780334472656,-12.0952653884888,-77.0752410888672,-12.090313911438,-77.0741653442382,-12.0878276824951,-77.0741882324219,-12.0872974395751,-77.0749359130859,-12.085789680481,-77.0729141235351,-12.0854320526123,-77.0717849731445,-12.0837411880493,-77.0711975097656,-12.0840902328491,-77.0629882812499,-12.0862483978271,-77.0623321533203,-12.0869045257568,-77.0530548095703,-12.0930376052856])//magadalena del mar
+          distritos.push([-77.022590637207,-12.0908107757568,-77.0290298461913,-12.0918321609497,-77.0295867919922,-12.091492652893,-77.0302505493164,-12.0903415679931,-77.03067779541,-12.0899925231934,-77.0375366210937,-12.089427947998,-77.0424575805664,-12.0894365310669,-77.0434646606445,-12.0896186828613,-77.044563293457,-12.0912494659424,-77.0460739135742,-12.0923929214478,-77.0471343994141,-12.0908222198486,-77.0480194091796,-12.0913124084473,-77.048469543457,-12.0911464691162,-77.0489273071289,-12.0871124267578,-77.0491714477538,-12.0865859985351,-77.0487747192382,-12.0854597091675,-77.0464401245117,-12.083306312561,-77.0446014404296,-12.0820360183715,-77.0417327880859,-12.0809288024902,-77.0398178100585,-12.0806074142456,-77.0376739501953,-12.0806074142456,-77.0372924804688,-12.0803203582764,-77.036750793457,-12.0804958343506,-77.0355529785156,-12.0803251266479,-77.0318450927734,-12.0789318084716,-77.0279541015625,-12.07861328125,-77.0271835327148,-12.0798778533935,-77.022590637207,-12.0908107757568])//lince
+          distritos.push([-77.0105972290039,-12.1070680618286,-77.0142517089843,-12.1081438064575,-77.0164566040038,-12.1039533615112,-77.0177993774413,-12.1025047302246,-77.0186157226562,-12.1019582748413,-77.0266952514648,-12.1029195785522,-77.0270919799805,-12.1031503677368,-77.029800415039,-12.1030502319336,-77.0310897827148,-12.1034221649169,-77.0325469970703,-12.1049365997314,-77.0353240966796,-12.1089029312134,-77.0365295410156,-12.1100950241089,-77.036979675293,-12.110068321228,-77.0386734008788,-12.1090669631958,-77.0392227172852,-12.1091632843016,-77.0405807495117,-12.1099672317504,-77.042610168457,-12.1092901229858,-77.0451583862304,-12.1104574203491,-77.0460662841797,-12.1106672286987,-77.0469589233398,-12.1104183197021,-77.0488891601562,-12.1086683273315,-77.0507736206054,-12.1076326370239,-77.0517807006836,-12.1075353622436,-77.0537109375,-12.1079273223876,-77.0552978515625,-12.1064958572388,-77.0582427978516,-12.103175163269,-77.057991027832,-12.1023368835449,-77.0531539916992,-12.0935802459717,-77.0530548095703,-12.0930376052856,-77.051887512207,-12.0912208557129,-77.0496597290039,-12.0868453979492,-77.0491714477538,-12.0865859985351,-77.0489273071289,-12.0871124267578,-77.048469543457,-12.0911464691162,-77.0480194091796,-12.0913124084473,-77.0471343994141,-12.0908222198486,-77.0460739135742,-12.0923929214478,-77.044563293457,-12.0912494659424,-77.0434646606445,-12.0896186828613,-77.0424575805664,-12.0894365310669,-77.0375366210937,-12.089427947998,-77.03067779541,-12.0899925231934,-77.0302505493164,-12.0903415679931,-77.0295867919922,-12.091492652893,-77.0290298461913,-12.0918321609497,-77.022590637207,-12.0908107757568,-77.0175018310546,-12.0902624130249,-77.0169982910156,-12.0900201797485,-77.0106048583984,-12.0892162322997,-77.0096282958984,-12.0888900756835,-77.0073165893555,-12.0887889862061,-77.0070648193359,-12.089015007019,-77.0109252929687,-12.0958414077759,-77.0125350952148,-12.0992097854614,-77.0105438232421,-12.1065435409546,-77.0105972290039,-12.1070680618286])//san isidro
+
+        let distritos2=[];
+        distritos.forEach(()=>{distritos2.push([])})
+
+        //var distritos2=new Array(1,0);
+        let lngz='', latz='';
+        distritos.forEach((e,i)=>{
+          //console.log(i)
+          distritos[i].forEach((a,b)=>{
+            if((b%2)!=0){
+              latz=a
+              distritos2[i].push({lng:lngz,lat:latz})
+            }else
+            {
+              lngz=a
+            }
+          })
+        })
+       //console.log(a)
+
+       let colores=['blue','black','gray','maroon','yellow','olive','lime','aqua','teal','fuchsia','purple','skyblue','peru','green','red']
+       let dist=[]
+       let distZ=[]
+       let infoWin
+
+       //let yocb=document.getElementById("cbTabla")
+
+       let dataTableInfo = []
+      //let dataTableInfo2 = [['desrip', 'valor'],['Recuperado',55],['Fallacedio', 24]]
+      //dataTableInfo2.push(['dsd',36])
+      //dataTableInfo2.push(['dsd',36])
+      //console.log(yocb.value)
+
+
+        distritos2.forEach((e,i)=>{
+        dist[i]=new google.maps.Polygon({paths:distritos2[i],strokeColor: colores[i],strokeOpacity:0.2,strokeWeight:1.5,fillColor:colores[i],fillOpacity:0.1})
+        //distZ[i]=new google.maps.Polygon({paths:distritos2[i],strokeColor: colores[i],strokeOpacity:0.5,strokeWeight:3,fillColor:colores[i],fillOpacity:0.4})
+        dist[i].setMap(map)
+        //dist[i].addListener("mouseover",e=>{distZ[i].setMap(map) })
+        //distZ[i].addListener("mouseout",e=>{distZ.forEach((e,i)=>{distZ[i].setMap(null)}) })//elimino todos los distritos resaltadaso
+        
+        /*distZ[i].addListener("click",(e)=>{
+              let contenido=""
+              let datoDist = []
+        })*/
+        //infoWin=new google.maps.InfoWindow;
+        var miElemento = document.getElementById("td_ia_"+i);
+
+        nameClass="";
+
+        if (miElemento !== null ){
+           distr= $("#td_distrito_"+i).html();
+           insp= $("#td_insp_"+i).html();
+           posi= $("#td_posi_"+i).html();
+           ia= $("#td_ia_"+i).html();
+
+           conf= $("#td_conf_"+i).html();
+           prob= $("#td_prob_"+i).html();
+
+           ac= $("#td_ac_"+i).html();
+           ic= $("#td_ic_"+i).html();
+           ap= $("#td_ap_"+i).html();
+           ip= $("#td_ip_"+i).html();
+
+           fal= $("#td_fal_"+i).html();
+           feb= $("#td_feb_"+i).html();
+
+
+
+           ind=parseFloat(ia);
+
+            if (ind<1){
+                nameClass="green";
+            }else if(ind<2){
+                nameClass="orange";
+            }else if(ind>=2){
+                nameClass="red";
+            }
+           
+        }else{
+           distr=''; 
+           insp='0';
+           posi='0';
+           ia='0.000';  
+           conf='0';
+           prob='0';
+
+           ac= '0';
+           ic= '0';
+           ap= '0';
+           ip= '0';
+           fal='0';
+           feb='0';
+
+        }
+
+        contenido="<p style='font-weight: bold; text-align:center;'>"+distr+"</p>";
+        contenido+="<p><strong>Viviendas Inspeccionadas: "+insp+"</strong></p>";
+        contenido+="<p><strong>Viviendas Positivas     : "+posi+"</strong></p>";
+        contenido+="<p style='color: "+nameClass+"'><strong>Indice Aedico           : "+ia+"</strong></p>";
+        contenido+="<p><hr></p>";
+        contenido+="<p style='color: red' ><strong>Confirmados     : "+conf+"</strong></p>";
+
+        contenido+="<p style='color: red'><strong>C. Autoctonos      : "+ac+"</strong></p>";
+        contenido+="<p style='color: red'><strong>C. Importados      : "+ic+"</strong></p>";
+
+        contenido+="<p style='color: blue'><strong>Probables       : "+prob+"</strong></p>";        
+
+        contenido+="<p style='color: blue'><strong>P. Autoctonos      : "+ap+"</strong></p>";
+        contenido+="<p style='color: blue'><strong>P. Importados      : "+ip+"</strong></p>";
+
+        contenido+="<p><hr></p>";
+        contenido+="<p style='color: orange'><strong>Febriles     : "+feb+"</strong></p>";
+        contenido+="<p style='color: purple'><strong>Fallecidos   : "+fal+"</strong></p>";
+
+
+        var infowindow = new google.maps.InfoWindow({
+
+            content: contenido // Puedes personalizar el contenido según tus necesidades
+        });
+        dist[i].addListener("click",(e)=>{
+            //infowindow.open(map, dist[i]);
+            //alert("hola");
+            infowindow.setPosition(e.latLng)
+            infowindow.open(map)
+        });
+
+        })
+
+        /*End poligonos*/
+
+}  
+
+
+
+function initAutocomplete() {
+    // Create the autocomplete object, restricting the search to geographical
+    // location types.
+    autocomplete = new google.maps.places.Autocomplete(
+        /** @type {!HTMLInputElement} */(document.getElementById('direccion_neb')),
+        {
+            types: ['geocode'],
+            componentRestrictions: { 'country': ['pe'] }
+
+        });
+
+    // When the user selects an address from the dropdown, populate the address
+    // fields in the form.
+    autocomplete.addListener('place_changed', fillInAddress);
+
+    /*map = new google.maps.Map(document.getElementById('map'), {
+         zoom: 18,
+         gestureHandling: 'greedy',
+         streetViewControl: false,
+         disableDefaultUI: true,
+         mapTypeControl: false,
+         center: new google.maps.LatLng(-12.042475148258253, -77.08818063065029),
+         mapTypeId: google.maps.MapTypeId.ROADMAP
+     });
+
+    marker1 = new google.maps.Marker({
+        position: new google.maps.LatLng(-12.042475148258253, -77.08818063065029),
+        offset: '0',       
+        map: map       
+    });*/
+
+  }
+
+function fillInAddress() {
+    // Get the place details from the autocomplete object.
+    var place = autocomplete.getPlace();
+
+    lat=place.geometry.location.lat();
+    lng=place.geometry.location.lng();
+
+    $("#latitud_neb").val(lat);
+    $("#longitud_neb").val(lng);
+
+    
+
+  }
+
+
+function getLocalidades(def){
+
+	var parametros = {
+        "op": "listLocalidades",
+        "sector": $('#sector').val(),
+        "id_local":$("#hid_local").val(),
+        "id_default":def,
+        "q":"%%"
+    };    
+    $.ajax({
+        data: parametros,
+        url: '../ajax/tabla.php',
+        type: 'get',
+        beforeSend: function () {            
+        },
+        success: function (response) {
+            $("#id_localidad").html(response);
+            $("#id_localidad").select2();
+        }
+    });	
+
+}
+
+
+function save_item_f(){
+
+      msg='';
+     
+      if ($("#direccion_neb").val()==''){
+         bootbox.alert("Ingrese direccion");
+         return false;  
+      }
+
+      if ($("#latitud_neb").val()==''){
+         bootbox.alert("Ingrese latitud");
+         return false;  
+      }
+
+      if ($("#longitud_neb").val()==''){
+         bootbox.alert("Ingrese longitud");
+         return false;
+      }
+
+      if ($("#nro_pisos").val()==''){
+          bootbox.alert("Ingrese un valor o 0 para pisos");
+          return false;  
+      }
+
+      if ($("#nro_residentes").val()==''){
+          bootbox.alert("Ingrese un valor o 0 para residentes");
+          return false;  
+      }
+
+      if ($("#cbo_condicion_vivienda").val()==''){
+          bootbox.alert("Seleccione condicion de vivienda");
+          return false;  
+      }
+
+      if ($("#mezcla").val()==''){
+          bootbox.alert("Ingrese un valor o 0 para mezcla");
+          return false;  
+      }
+
+      if ($("#gasolina").val()==''){
+          bootbox.alert("Ingrese un valor o 0 para gasolina");
+          return false;  
+      }
+      
+
+      if (msg){
+        return  bootbox.alert(msg);
+      }
+     
+
+
+    bootbox.confirm({
+        title: "Mensaje",
+        message: "Esta seguro de guardar el registro?",
+        buttons: {
+          cancel: {
+            label: '<i class="fa fa-times"></i> Cancelar'
+          },
+          confirm: {
+            label: '<i class="fa fa-check"></i> Aceptar',
+            className: "btn-success"
+          }
+        },
+        callback: function (result) {
+          
+          //console.log('This was logged in the callback: ' + result);
+          if (result){
+              $("#loaderModal").show();
+              //$op=($("#id_ficha").val()=='')?'saveFicha':'updateFicha';
+              $op='saveFichaDetalle';
+              id_ficha_detalle=($("#id_ficha_detalle").val()=='')?'0':$("#id_ficha_detalle").val();
+              $.ajax({
+                type: "POST",
+                url: "../ajax/ficha_nebulizacion.php?op="+$op,
+                //dataType: "json",
+                //data: JSON.stringify({ paramName: info }),
+                data : {
+                  id_ficha: $("#id_ficha").val(),
+                  id_ficha_detalle: id_ficha_detalle,                 
+                  direccion: $("#direccion_neb").val().toUpperCase(),
+                  latitud: $("#latitud_neb").val(),
+                  longitud: $("#longitud_neb").val(),
+                  codigo_manzana: $("#codigo_manzana").val().toUpperCase(),
+                  nro_pisos: $("#nro_pisos").val(),
+                  nro_residentes: $("#nro_residentes").val(),
+                  id_condicion_vivienda: $("#cbo_condicion_vivienda").val(),
+                  mezcla: $("#mezcla").val(),
+                  gasolina: $("#gasolina").val(),
+                  id_usuario: $("#s_id_usuario").val()
+
+                },
+                success: function(msg){
+                  $("#loaderModal").hide();
+                  //table.ajax.reload();
+                  update_child($("#id_ficha").val());
+                  var amsg=msg.split('|');
+                  var nerror=amsg[0];
+                  if (nerror=='0'){
+                    bootbox.alert('Ocurrio un error: '+amsg[1]);
+                  }else{
+                    $('#modalItemF').modal('toggle');
+                    bootbox.alert('Registro guardado');
+                  }
+
+                }
+              });
+
+        }
+      }
+
+    });
+
+
+
+
+
+}
+
+function save_item(){
+
+	  msg='';
+      if ($("#direccion_familia").val()==''){
+          bootbox.alert("Ingrese direccion o familia");
+          return false;  
+      }
+      if ($("#id_condicion_vivienda").val()==''){
+         bootbox.alert("Seleccione una condicion de vivienda");
+          return false;  
+      }
+      cond=$("#id_condicion_vivienda").val();
+      if (cond=='4' && cond=='5' ){   //Diferente de cerrada o desha
+        cnt=$("#nro_habitantes").val();
+        cnt=cnt.parseInt();  
+        if (cnt<=0){
+          return bootbox.alert("Ingrese un valor valido para numero de habitantes");
+        }
+      }
+      direc=$("#direccion_familia").val();
+      for (var i = 0; i < items_arr.length; i++) {
+        if (direc == items_arr[i][1]) {
+          msg = "La direccion o familia ya se agrego a la lista";
+          break;
+        }
+      }
+
+      if ($("#id_usuario_registro").val()==''){
+      		msg = "Seleccione el personal que realiza la inspección";		
+      }
+
+      if ($("#cantidad_probable_dengue").val()==''){
+      		return bootbox.alert("Ingrese valor 0 en cantidad probable");
+      }
+
+
+
+      if (msg){
+        return  bootbox.alert(msg);
+      }
+
+      caso_probable_dengue='';
+      if ($('#caso_probable_dengue').is(':checked')){
+      		caso_probable_dengue='1'
+      }
+
+      var aItems= [];
+ 
+      aItems.push({      
+      direccion_familia   : direc.toUpperCase(),
+      nro_habitantes: $("#nro_habitantes").val(),
+      id_condicion_vivienda: $("#id_condicion_vivienda").val(),
+      cnt_tipo_1_i: $("#cnt_tipo_1_i").val(),
+      cnt_tipo_1_p: $("#cnt_tipo_1_p").val(),
+      cnt_tipo_1_t: $("#cnt_tipo_1_t").val(),
+      cnt_tipo_1_v: $("#cnt_tipo_1_v").val(),
+      cnt_tipo_2_i: $("#cnt_tipo_2_i").val(),
+      cnt_tipo_2_p: $("#cnt_tipo_2_p").val(),
+      cnt_tipo_2_t: $("#cnt_tipo_2_t").val(),
+      cnt_tipo_2_v: $("#cnt_tipo_2_v").val(),
+      cnt_tipo_3_i: $("#cnt_tipo_3_i").val(),
+      cnt_tipo_3_p: $("#cnt_tipo_3_p").val(),
+      cnt_tipo_3_t: $("#cnt_tipo_3_t").val(),
+      cnt_tipo_3_v: $("#cnt_tipo_3_v").val(),
+      cnt_tipo_4_i: $("#cnt_tipo_4_i").val(),
+      cnt_tipo_4_p: $("#cnt_tipo_4_p").val(),
+      cnt_tipo_4_t: $("#cnt_tipo_4_t").val(),
+      cnt_tipo_4_v: $("#cnt_tipo_4_v").val(),
+      cnt_tipo_5_i: $("#cnt_tipo_5_i").val(),
+      cnt_tipo_5_p: $("#cnt_tipo_5_p").val(),
+      cnt_tipo_5_t: $("#cnt_tipo_5_t").val(),
+      cnt_tipo_5_v: $("#cnt_tipo_5_v").val(),
+      cnt_tipo_6_i: $("#cnt_tipo_6_i").val(),
+      cnt_tipo_6_p: $("#cnt_tipo_6_p").val(),
+      cnt_tipo_6_t: $("#cnt_tipo_6_t").val(),
+      cnt_tipo_6_v: $("#cnt_tipo_6_v").val(),
+      cnt_tipo_7_i: $("#cnt_tipo_7_i").val(),
+      cnt_tipo_7_p: $("#cnt_tipo_7_p").val(),
+      cnt_tipo_7_t: $("#cnt_tipo_7_t").val(),
+      cnt_tipo_7_v: $("#cnt_tipo_7_v").val(),
+      cnt_tipo_8_i: $("#cnt_tipo_8_i").val(),
+      cnt_tipo_8_p: $("#cnt_tipo_8_p").val(),
+      cnt_tipo_8_t: $("#cnt_tipo_8_t").val(),
+      cnt_tipo_8_v: $("#cnt_tipo_8_v").val(),
+      cnt_tipo_9_i: $("#cnt_tipo_9_i").val(),
+      cnt_tipo_9_p: $("#cnt_tipo_9_p").val(),
+      cnt_tipo_9_t: $("#cnt_tipo_9_t").val(),
+      cnt_tipo_9_v: $("#cnt_tipo_9_v").val(),
+      cnt_larvicidas: $("#cnt_larvicidas").val(),
+      cnt_febriles: $("#cnt_febriles").val(),
+      id_usuario_registro: $("#id_usuario_registro").val(),
+      caso_probable_dengue : caso_probable_dengue,
+      cantidad_probable_dengue: $("#cantidad_probable_dengue").val(),
+
+      cnt_tipo_1_tf: $("#cnt_tipo_1_tf").val(),
+      cnt_tipo_1_d: $("#cnt_tipo_1_d").val(),
+      cnt_tipo_2_tf: $("#cnt_tipo_2_tf").val(),
+      cnt_tipo_2_d: $("#cnt_tipo_2_d").val(),
+      cnt_tipo_3_tf: $("#cnt_tipo_3_tf").val(),
+      cnt_tipo_3_d: $("#cnt_tipo_3_d").val(),
+      cnt_tipo_4_tf: $("#cnt_tipo_4_tf").val(),
+      cnt_tipo_4_d: $("#cnt_tipo_4_d").val(),
+      cnt_tipo_5_tf: $("#cnt_tipo_5_tf").val(),
+      cnt_tipo_5_d: $("#cnt_tipo_5_d").val(),
+      cnt_tipo_6_tf: $("#cnt_tipo_6_tf").val(),
+      cnt_tipo_6_d: $("#cnt_tipo_6_d").val(),
+      cnt_tipo_7_tf: $("#cnt_tipo_7_tf").val(),
+      cnt_tipo_7_d: $("#cnt_tipo_7_d").val(),
+      cnt_tipo_8_tf: $("#cnt_tipo_8_tf").val(),
+      cnt_tipo_8_d: $("#cnt_tipo_8_d").val(),
+      cnt_tipo_9_tf: $("#cnt_tipo_9_tf").val(),
+      cnt_tipo_9_d: $("#cnt_tipo_9_d").val(),
+
+      cnt_tipo_10_i: $("#cnt_tipo_10_i").val(),
+      cnt_tipo_10_p: $("#cnt_tipo_10_p").val(),
+      cnt_tipo_10_t: $("#cnt_tipo_10_t").val(),
+      cnt_tipo_10_v: $("#cnt_tipo_10_v").val(),
+      cnt_tipo_10_tf: $("#cnt_tipo_10_tf").val(),      
+      cnt_tipo_10_d: $("#cnt_tipo_10_d").val(),
+
+      latitud: $("#latitud").val(),
+      longitud: $("#longitud").val()
+
+
+
+
+ 	}); 
+
+
+
+    bootbox.confirm({
+        title: "Mensaje",
+        message: "Esta seguro de guardar el registro?",
+        buttons: {
+          cancel: {
+            label: '<i class="fa fa-times"></i> Cancelar'
+          },
+          confirm: {
+            label: '<i class="fa fa-check"></i> Aceptar',
+            className: "btn-success"
+          }
+        },
+        callback: function (result) {
+          
+          //console.log('This was logged in the callback: ' + result);
+          if (result){
+              $("#loaderModal").show();
+              //$op=($("#id_ficha").val()=='')?'saveFicha':'updateFicha';
+              $op='saveFichaDetalle';
+              id_ficha_detalle=($("#id_ficha_detalle").val()=='')?'0':$("#id_ficha_detalle").val();
+              $.ajax({
+                type: "POST",
+                url: "../ajax/ficha_vivienda.php?op="+$op,
+                //dataType: "json",
+                //data: JSON.stringify({ paramName: info }),
+                data : {
+                  id_ficha: $("#id_ficha").val(),
+                  id_ficha_detalle: id_ficha_detalle,
+                  detalle: aItems
+                },
+                success: function(msg){
+                  $("#loaderModal").hide();
+                  //table.ajax.reload();
+                  update_child($("#id_ficha").val());
+                  var amsg=msg.split('|');
+                  var nerror=amsg[0];
+                  if (nerror=='0'){
+                    bootbox.alert('Ocurrio un error: '+amsg[1]);
+                  }else{
+                    $('#modalItem').modal('toggle');
+                    bootbox.alert('Registro guardado');
+                  }
+
+                }
+              });
+
+        }
+      }
+
+    });
+
+
+
+
+
+}
+
+function open_new_item(id,user){
+	if (user!=$("#s_login").val()){
+		//return alert("Ud no puede ingresar registros en esta ficha");
+	}
+
+	//dat=table.rows({selected:  true}).data();
+	//console.log(table.rows(2).data());
+
+
+	$("#id_ficha").val(id);
+	$("#id_ficha_detalle").val('');
+	
+
+
+	$("#direccion_neb").val('');
+    $("#latitud_neb").val('');
+    $("#longitud_neb").val('');
+    $("#codigo_manzana").val('');
+    $("#nro_pisos").val('0');
+
+    $("#nro_residentes").val('0');
+    $("#cbo_condicion_vivienda").val('');
+    $("#mezcla").val('0.00');
+    $("#gasolina").val('0.00');
+
+	$('#modalItemF').modal('show');
+}
+
+function createDataTable(id,user){
+	tbl="dt"+id;
+				  dt=$('#'+tbl).DataTable({
+	              dom: "Blftip",
+
+	              "buttons": [
+	              {
+	              	text: '<i class="glyphicon glyphicon-plus"></i> Nuevo',
+	              	className: "btn btn-info btn-sm",
+	              	action: function ( e, dt, node, config ) {
+	              		open_new_item(id,user);
+	              	}
+
+	              }
+	              ],
+
+	              orderCellsTop: true,
+	              fixedHeader: true,
+	              fixedColumns: true,
+	              "lengthChange": true,
+	              "lengthMenu": [ 5, 10, 25, 75, 100],
+	              "bProcessing": true,
+	              "bJQueryUI": false,
+	              //"responsive": true,            
+	              "bInfo": true,
+	              "bFilter": true,
+	               "language": {
+	                  "url": "../public/datatables.net.languages/Spanish.json",
+	                    "lengthMenu": '_MENU_ entries per page',
+	                    "search": '<i class="fa fa-search"></i>',
+	                    "paginate": {
+	                      "previous": '<i class="fa fa-angle-left"></i>',
+	                          "next": '<i class="fa fa-angle-right"></i>'
+	                      },
+	                },
+
+	              "bDestroy": true,
+
+	              "columnDefs": [
+				    { "orderable": true, "targets": 0, "searchable": false },
+				    { "orderable": false, "targets": 1, "searchable": false },
+				    { "orderable": true, "targets": 2, "searchable": true /*, className: "wrapok"*/},
+				    { "orderable": false, "targets": 3, "searchable": false },
+				    
+			
+
+
+				    
+				  ],  
+
+
+	              "pagingType": 'numbers',
+	              "bAutoWidth": false ,
+	              "iDisplayLength": 10
+	            });
+}
+
+function downReport(tipo){
+
+	var cntCat=document.getElementById('cboalmacen').length;
+	strCat=$("#cboalmacen").val();
+	strCat=strCat.toString();
+	var aCat=strCat.split(",");
+	var cntSel=aCat.length;
+	if (cntCat==cntSel){
+		strCat="*";
+	}
+
+	if (tipo=='R'){
+		report="xlsResumenFichaAedes.php";
+	}else{
+		report="xlsResumenFichaAedesDetalle.php";
+	}
+
+	document.getElementById('aDwn').setAttribute('href',"../reportes/"+report+"?mes="+$('#mes_report').val()+"&anio="+$('#anio_report').val()+"&id_establecimiento="+strCat);
+    document.getElementById('aDwn').click();  
+}
+
+
+
+
+function open_ficha(id){
+	$.post("../ajax/ficha_nebulizacion.php?op=mostrar",{id_ficha : id}, function(data, status)
+	{
+		items_arr = [];
+    	id_items = 1;
+    	editItem=false;
+		data = JSON.parse(data);
+		$("#hid_local").val(data.id_local);
+		$("#id_local_destino").val(data.id_local).trigger('change');
+		$("#id_ficha").val(data.id);
+		$("#fecha_neb").val(data.fecha);
+
+        $("#sector_neb").val(data.sector);
+
+		$("#id_turno_neb").val(data.id_turno);
+		$("#nro_brigada_neb").val(data.nro_brigada);
+		$("#id_jefe_brigada_neb").val(data.id_jefe_brigada).trigger('change');
+
+        $("#nro_vuelta").val(data.vuelta);
+        $("#hora_inicio_neb").val(data.hora_inicio);
+        $("#hora_termino_neb").val(data.hora_termino);
+
+        $("#tipo_maquina_neb").val(data.tipo_maquina);
+        $("#insecticida_neb").val(data.insecticida);
+        $("#observaciones_neb").val(data.observaciones);
+        $("#id_nebulizador").val(data.id_nebulizador).trigger('change');
+
+		//getLocalidades(data.id_localidad);
+		//$('#id_localidad').append("<option value='"+data.id_localidad+"' selected='selected'>"+data.localidad+"</option>");
+
+		//$("#id_localidad").val(data.id_localidad);
+		//$("#id_tipo_actividad").val(data.id_tipo_actividad);
+
+		
+
+ 		$('#modalFichaF').modal('show');
+
+	});
+}
+function open_print(){
+	$('#modalPrint').modal('show');
+}
+
+function onlyNumber(e){
+	var key = window.Event ? e.which : e.keyCode
+	return (key >= 48 && key <= 57)
+}
+
+function sum_valores(){
+	tot_i=0;tot_p=0;tot_t=0;tot_l=0;
+	for (i=1;i<=9;i++){		
+		nval=$("#cnt_tipo_"+i.toString()+"_i").val();
+		tot_i+=parseInt(nval);
+	}
+
+	for (i=1;i<=9;i++){		
+		nval=$("#cnt_tipo_"+i.toString()+"_p").val();
+		tot_p+=parseInt(nval);
+	}
+
+	for (i=1;i<=9;i++){		
+		nval=$("#cnt_tipo_"+i.toString()+"_t").val();
+		tot_t+=parseInt(nval);
+	}
+
+	for (i=1;i<=9;i++){		
+		nval=$("#cnt_tipo_"+i.toString()+"_v").val();
+		tot_l+=parseInt(nval);
+	}
+
+
+
+	$("#total_i").html(tot_i);
+	$("#total_p").html(tot_p);
+	$("#total_t").html(tot_t);
+	$("#total_v").html(tot_l);
+
+
+}
+
+
+
+
+function printCompras(){
+
+	document.getElementById('aDwn').setAttribute('href',"../reportes/pdfCompras.php?desde="+$("#fecha_desde").val()+"&hasta="+$("#fecha_hasta").val());
+	document.getElementById('aDwn').click();
+}
+
+function buscarOrdenCompra(){
+	if ($("#moc_id_empresa").val()=='' ){
+		bootbox.alert('Seleccione empresa');
+		return false;
+	}
+	if ($("#mod_oc").val()==''){
+		bootbox.alert('Ingrese numero de orden de compra');
+		return false;
+	}
+
+
+
+	$.post("../ajax/ordencompra.php?op=buscar",{id_empresa: $("#moc_id_empresa").val(), id_orden_compra : $("#mod_oc").val()}, function(data, status)
+	{
+		data = JSON.parse(data);
+		//alert(data);
+		if (jQuery.isEmptyObject(data)){
+			bootbox.alert('No se hallo la Orden de Compra');
+			return false;
+		}
+
+		if (data.fecha_autorizacion=='' || data.fecha_autorizacion==null){
+			bootbox.alert('La Orden de Compra no se encuentra autorizada');
+			return false;
+		}
+		if (data.id_ingreso!='' && data.id_ingreso!=null){
+			bootbox.alert('La Orden de Compra ya fue facturada');
+			return false;
+		}
+
+
+		$("#id_empresa").val(data.id_empresa);
+		$("#id_moneda").val(data.id_moneda);
+		$("#id_forma_pago").val(data.id_forma_pago);
+
+		$("#tipo_cambio").val(data.tipo_cambio);
+		$("#porcentaje_igv").val(data.porcentaje_igv);
+
+		$("#id_orden_compra").val(data.id);	
+		$("#nro_orden_compra").val(data.orden);	
+
+		$('#razon_social').append("<option value='"+data.id_proveedor+"' selected='selected'>"+data.razon_social+"</option>");
+ 		$("#razon_social").trigger('change');
+
+ 		$("#id_empresa").prop("disabled",true);
+      	//
+      	listLocales('');
+      	$("#id_local").prop("disabled",false);
+
+
+      	$("#tblDet > tbody").empty();
+      	
+
+      	calculoTotal();
+
+
+		$("#modalOrdenCompra").modal('toggle')
+		$("#modalTitle").html('Nueva Compra');
+	 	$('#modalNew').modal('show');	
+
+	 });
+
+	
+}
+
+
+
+
+//Función limpiar_modal_local
+//Función limpiar
+
+function action_show_item(id,id_ficha){
+	
+	$("#id_ficha_detalle").val(id);
+	$("#id_ficha").val(id_ficha);
+	$.ajax({
+		type: "GET",
+		url: "../ajax/ficha_nebulizacion.php?op=getItem",
+		dataType: "json",
+		//data: JSON.stringify({ paramName: info }),
+		data : {		   	
+		  	id: id
+		},
+		success: function(data){
+			
+			//$("#numero_lote").val(data.numero_lote);
+			$("#direccion_neb").val(data[0]['direccion']);
+			$("#latitud_neb").val(data[0]['latitud']);
+			$("#longitud_neb").val(data[0]['longitud']);
+			$("#codigo_manzana").val(data[0]['codigo_manzana']);
+			$("#nro_pisos").val(data[0]['nro_pisos']);
+
+            $("#nro_residentes").val(data[0]['nro_residentes']);
+            $("#cbo_condicion_vivienda").val(data[0]['id_condicion_vivienda']);
+            $("#mezcla").val(data[0]['mezcla']);
+            $("#gasolina").val(data[0]['gasolina']);
+
+			
+			$('#modalItemF').modal('show');
+	    }
+	});
+
+}
+function action_show_item_(id_ingreso,id_item,id_lote){
+
+	//Verificar si no tiene salidas con el lote a editar
+	if (id_lote!=''){
+		$.ajax({
+			type: "POST",
+			url: "../ajax/compra.php?op=verificaDisponibilidadLote",
+		    //dataType: "json",
+		    //data: JSON.stringify({ paramName: info }),
+		    data : {
+		    	id_ingreso: id_ingreso,
+		    	id_item: id_item,
+		    	id_lote: id_lote
+		    },
+		    success: function(msg){
+		    	if (msg=='1'){
+		    		bootbox.alert('Item no se puede eliminar o editar, existe salidas vinculadas al lote');
+		    	}else{
+		    		mostrar_datos_item(id_ingreso,id_item,id_lote);
+					$('#modalItemTitle').html('Edicion de Item');
+					$('#modalItem').modal('show');
+
+		    	}
+		    }
+		});
+
+
+	}else{
+		mostrar_datos_item(id_ingreso,id_item,id_lote);
+		$('#modalItemTitle').html('Edicion de Item');
+		$('#modalItem').modal('show');
+	}
+
+}
+
+function mostrar_datos_item(id_ingreso,id_item,id_lote){
+
+	$.ajax({
+		type: "POST",
+		url: "../ajax/compra.php?op=showItem",
+		dataType: "json",
+		//data: JSON.stringify({ paramName: info }),
+		data : {
+		   	id_ingreso: id_ingreso,
+		  	id_item: id_item,
+		  	id_lote: id_lote
+		},
+		success: function(data){
+			$("#id_ingreso").val(id_ingreso);
+	    	$("#categoria").val(data.categoria);
+	    	$("#marca").val(data.marca);
+	    	$("#unidad_medida_compra").val(data.unidad_medida_ingreso);
+	    	$("#factor").val(data.factor);
+	    	$("#cantidad").val(data.cantidad);
+	    	$("#costo_umc").val(data.costo_unitario_umc);
+
+			$("#numero_lote").val(data.numero_lote);
+
+			$("#id_lote").val(data.id_lote);
+
+			$("#fecha_vencimiento").val(data.fecha_vencimiento);
+
+			$('#id_item').append("<option value='"+data.id_item+"' selected='selected'>"+data.item+"</option>");
+ 			$("#id_item").trigger('change');
+ 			$('#id_item').select2("enable",false);
+			ContarUnidades();
+ 			calcular();
+ 			editItem=true;
+ 			newItem=false;
+	    }
+	});
+
+}
+
+function action_remove_item(id_ficha_detalle,id_ficha){
+	
+
+	bootbox.confirm({
+        title: "Mensaje",
+        message: "Esta seguro de eliminar el item seleccionado?",
+        buttons: {
+          cancel: {
+            label: '<i class="fa fa-remove"></i> Cancelar'
+          },
+          confirm: {
+            label: '<i class="fa fa-check"></i> Aceptar',
+            className: "btn-success"
+          }
+        },
+        callback: function (result) {
+          //console.log('This was logged in the callback: ' + result);
+          if (result){
+
+				$.ajax({
+					type: "POST",
+					url: "../ajax/ficha_nebulizacion.php?op=removeItem",
+				    //dataType: "json",
+				    //data: JSON.stringify({ paramName: info }),
+				    data : {
+				    	id: id_ficha_detalle				    	
+				    },
+				    success: function(msg){
+
+				    	update_child(id_ficha);
+				    	bootbox.alert('Item eliminado');
+				    	
+
+				    }
+				});
+		}
+		}
+	});
+
+}
+
+function limpiar_local()
+{
+	$("#modalLocalTitle").html('Nuevo registro');
+	$("#id_local").val("");
+	$("#nombre_local").val("");
+	$("#direccion_local").val("");
+	$('#id_ubigeo_local').val('').trigger('change.select2');
+	$("#celular_local").val("");
+	$("#telefono_fijo_local").val("");
+
+}
+function limpiar_modal_items() {
+	editItem=false;
+	newItem=false;
+	$('#id_item').val('').trigger('change.select2');
+
+	$("#categoria").val('');
+	$("#marca").val('');
+	$("#unidad_medida_compra").val('');
+	$("#factor").val('1');
+	$("#cantidad").val('1');
+	$("#unidades").val('0');
+	$("#costo_umc").val('0.00');
+	$("#costo_unidad").val('0.00');
+	$("#costo_total").val('0.00');
+	$("#numero_lote").val('');
+	$("#fecha_vencimiento").val('');
+
+	$("#maneja_lotes").iCheck('uncheck');
+
+	$("#numero_lote").prop("disabled",true);
+	$("#fecha_vencimiento").prop("disabled",true);
+}
+
+function limpiar()
+{
+	$("#modalTitle").html('Nuevo registro');
+	editItem=false;
+	$("#id_ingreso").val("");
+
+	$("#id_tipo_documento").val("");
+	$("#serie_documento").val("");
+	$("#id_empresa").val("");
+	$("#id_local").val("");
+	$("#numero_documento").val("");
+	$("#fecha_compra").val("");
+
+	$("#id_moneda").val("1");
+	$("#porcentaje_igv").val("18");
+	$("#tipo_cambio").val("3.330");
+	
+	$("#numero_guia").val("");
+	$("#id_orden_compra").val("");
+	$("#nro_orden_compra").val("");
+	$("#observacion").val("");
+
+	$("#ruc").val("");
+	$("#direccion").val("");
+	$('#razon_social').val('').trigger('change.select2');
+
+	//document.getElementById('tblDet').getElementsByTagName('tbody').innerHtml='';
+
+	//$("#maneja_lotes").iCheck('uncheck');
+
+	$("#tblDet > tbody").empty();
+	$("#td_total").html('0.00');
+	$("#td_subtotal").html('0.00');
+    $("#td_igv").html('0.00');
+
+    $("#id_empresa").prop("disabled",false);
+    $("#id_local").prop("disabled",false);
+}
+
+
+//Función mostrar formulario
+function mostrarform(flag)
+{
+	limpiar();
+	if (flag)
+	{
+		$("#listadoregistros").hide();
+		$("#formularioregistros").show();
+		$("#btnGuardar").prop("disabled",false);
+		$("#btnagregar").hide();
+	}
+	else
+	{
+		$("#listadoregistros").show();
+		$("#formularioregistros").hide();
+		$("#btnagregar").show();
+	}
+}
+
+//Función cancelarform
+function cancelarform()
+{
+	limpiar();
+	mostrarform(false);
+}
+//Actualiza child row
+function update_child(row){
+	var parametros = {"id":row};
+	$.ajax( {
+		url: '../ajax/ficha_nebulizacion.php?op=detalleFicha&id_usuario='+$("#s_id_usuario").val(),
+		data:  parametros,
+		dataType: 'html',
+		success: function ( json ) {
+			$("#row_"+row).html( json );
+			createDataTable(row,$("#s_login").val());
+		}
+	} );
+}
+
+//Función Listar
+function listar()
+{
+	function format ( rowData ) {
+		
+		var parametros = {"id":rowData[0]};
+		var div = $("<div id='row_"+rowData[0]+"' >")
+		.addClass( 'Cargando' )
+		.text( 'Cargando...' );
+		$.ajax( {
+			url: '../ajax/ficha_nebulizacion.php?op=detalleFicha&id_usuario='+$("#s_id_usuario").val(),
+			data:  parametros,
+			dataType: 'html',
+			success: function ( json ) {
+				div
+				.html( json )
+				.removeClass( 'loading' );
+				 createDataTable(rowData[0],rowData[9]);
+			}
+		} );
+
+		return div;
+		//alert('hola');
+	}
+
+	$('#tbllistado thead tr').clone(true).appendTo( '#tbllistado thead' );
+    $('#tbllistado thead tr:eq(1) th').each( function (i) {
+        var title = $(this).text();
+        if (title!='' && $.trim(title)!='Acciones' && title!='Fecha Inicio' && title!='Fecha Termino' && title!='Fecha Crea'){
+        	$(this).html( '<input style="width:100%;" type="text" class="form-control input-sm" placeholder="Buscar '+title+'" />' );
+ 		}else{
+ 			$(this).html('');
+ 		}
+        $( 'input', this ).on( 'keyup change', function () {
+            if ( table.column(i).search() !== this.value ) {
+                table
+                    .column(i)
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    } );
+
+
+	table=$('#tbllistado').DataTable(
+
+
+	{
+		dom: "Bltip",
+
+		buttons: [
+		{
+			extend: 'collection',
+			text: "Nuevo <span class='caret'></span>",
+			className: "btn btn-success  dropdown-toggle",
+			autoClose: true,
+			select: true,
+			buttons: [
+			{ text: 'Nueva Registro',   action: function () { ver(); } },
+                //{ text: 'Abrir Orden Compra', action: function () { openOrdenCompra(); } }
+
+                ],
+                fade: true
+            },
+            
+            /*{
+            	text: '<i class="glyphicon glyphicon-download-alt"></i> Descargar ',
+            	className: "btn btn-success  dropdown-toggle",
+            	action: function ( e, dt, node, config ) {
+            		open_print();
+            	}
+            }*/
+
+            ],
+
+
+		orderCellsTop: true,
+        fixedHeader: true,
+        fixedColumns: true,
+		"lengthMenu": [ 5, 10, 25, 75, 100],//mostramos el menú de registros a revisar
+		"bProcessing": true,//Activamos el procesamiento del datatables
+		"bJQueryUI": false,
+		//"responsive": true,
+		"bInfo": true,
+		"bFilter": true,
+	    "bServerSide": true,//Paginación y filtrado realizados por el servidor
+	    "sServerMethod": "GET",
+	    //dom: '<Bl<f>rtip>',//Definimos los elementos del control de tabla
+	    /*buttons: [
+	    	 {
+		    	text: 'Nuevo',
+		    	//className: "btn",
+		    	action: function ( e, dt, node, config ) {
+		    		ver();
+		    	}
+		    }	,
+
+		    {
+		    	extend:    'copyHtml5',
+		    	text:      '<i class="fa fa-files-o"></i>',
+		    	titleAttr: 'Copy'
+		    },
+		    {
+		    	extend:    'excelHtml5',
+		    	text:      '<i class="fa fa-file-excel-o"></i>',
+		    	titleAttr: 'Excel'
+		    },
+		    {
+		    	extend:    'csvHtml5',
+		    	text:      '<i class="fa fa-file-text-o"></i>',
+		    	titleAttr: 'CSV'
+		    },
+		    {
+		    	extend:    'pdfHtml5',
+		    	text:      '<i class="fa fa-file-pdf-o"></i>',
+		    	titleAttr: 'PDF'
+		    }
+
+
+
+	    ],*/
+      	"sAjaxSource": "../ajax/ficha_nebulizacion.php?op=listar&id_nivel="+$("#s_id_nivel").val()+"&id_usuario="+$("#s_id_usuario").val()+"&id_local="+$("#s_id_local").val(), // Load Data
+		/*"ajax":
+				{
+					url: '../ajax/establecimiento.php?op=listar',
+					type : "get",
+					dataType : "json",
+					error: function(e){
+						console.log(e.responseText);
+					}
+				},*/
+				"language": {
+					"url": "../public/datatables.net.languages/Spanish.json",
+					"info": "Mostrando _PAGE_ a _PAGES_ de _TOTAL_ registros",
+					"lengthMenu": "Mostrar : _MENU_ registros",
+					"search": '<i class="fa fa-search"></i>',
+            "paginate": {
+
+								"previous": '<i class="fa fa-angle-left"></i>',
+								"next": '<i class="fa fa-angle-right"></i>'
+							},
+
+							"buttons": {
+								"copyTitle": "Tabla Copiada",
+								"copySuccess": {
+									_: '%d líneas copiadas',
+									1: '1 línea copiada'
+								}
+							}
+						},
+		"bDestroy": true,
+
+		"columnDefs": [
+		{ "orderable": false,	"targets": 0,	"searchable": false },
+		{ "orderable": false,	"targets": 1,	"searchable": true },
+		{ "orderable": true,	"targets": 2,	"searchable": true /*, className: "wrapok"*/},
+		{ "orderable": true,	"targets": 3,	"searchable": true },
+		{ "orderable": true,	"targets": 4,	"searchable": true },
+		{ "orderable": true,	"targets": 5,	"searchable": true },
+		{ "orderable": true,	"targets": 6,	"searchable": true },
+		{ "orderable": true,	"targets": 7,	"searchable": true },
+		{ "orderable": true,	"targets": 8,	"searchable": true },
+		{ "orderable": true,	"targets": 9,	"searchable": false },
+		{ "orderable": true,	"targets": 10,	"searchable": false }
+		],
+
+		"createdRow": function( row, data, dataIndex){
+			//if( data[11] ==  'f'){
+			//	$(row).addClass('danger')
+				//$(row).addClass('alert alert-warning');
+				//$(row).css('background-color', 'rgb(250, 235, 204)');
+				//$(row).css('background-color', '#F39B9B');
+			//}
+
+		},
+
+		/*"drawCallback": function () {
+            $('.dataTables_paginate > .pagination').addClass('bg-green');
+        },*/
+
+		initComplete: function () {
+			//$('.dt-buttons').removeClass('btn-group'); 
+			table.columns().every( function () {
+				var that = this;
+				$( 'input', this.footer() ).on( 'keyup change', function () {
+					that
+					.search( this.value )
+					.draw();
+				} );
+			} );
+		},
+
+		columns: [
+			{
+			className: 'details-control',
+			defaultContent: '',
+			data: null,
+			orderable: false
+			},
+
+			//{ aTargets: null },
+			{ aTargets: 'f.id' },			
+			{ aTargets: 'l.nombre' },
+			{ aTargets: 'f.sector' },		
+			{ aTargets: 'f.fecha' },
+			{ aTargets: 't.descripcion' },
+			{ aTargets: 'f.nro_brigada' },
+			{ aTargets: 'jefe_brigada' },
+			{ aTargets: 'f.vuelta' },
+            { aTargets: 'f.hora_inicio' },
+            { aTargets: 'f.hora_termino' },
+            { aTargets: 'f.tipo_maquina' },
+            { aTargets: 'f.insecticida' },
+			{ aTargets: 'uc.login' },
+            { aTargets: 'f.fecha_creacion' }
+			
+
+			],
+
+		"pagingType": 'full_numbers',
+		"iDisplayLength": 10,//Paginación
+	    "order": [[ 13, "des" ]]//Ordenar (columna,orden)
+
+	});
+
+
+
+
+
+	$('#tbllistado').removeClass('display').addClass('table table-striped table-bordered');
+
+	$('#tbllistado tfoot th').each(function () {
+		//Agar kolom Action Tidak Ada Tombol Pencarian
+		if ($(this).text() != "" && $(this).text() != "Acciones" && $(this).text() != "Fecha Inicio" && $(this).text() != "Fecha Termino" && $(this).text() != "Estado") {
+				var title = $('#tbllistado thead th').eq($(this).index()).text();
+				$(this).html('<input class="form-control input-sm" type="text" placeholder="Buscar ' + title + '" style="width:100%;" />');
+		}
+	});
+
+
+	$('#tbllistado tbody').on('click', 'td.details-control', function () {
+		var tr = $(this).closest('tr');
+
+		var row = table.row( tr );
+		var data = table.row( this ).data();
+		console.log(data);
+
+		if ( row.child.isShown() ) {
+			row.child.hide();
+			tr.removeClass('shown');
+			//tr.find('svg').attr('data-icon', 'plus-circle');
+		}
+		else {
+			row.child( format(row.data()) ).show();
+			tr.addClass('shown');
+			//tr.find('svg').attr('data-icon', 'minus-circle');
+		}
+	} );
+
+
+	/*$('.buttons-excel, .buttons-print').each(function() {
+	   $(this).removeClass('btn-default').addClass('btn-primary')
+	})*/
+
+
+}
+//Función para guardar o editar
+
+function guardaryeditar()
+{
+	if ($("#id_item").val()==''){
+		var msj="Esta seguro de guardar el nuevo registro?";
+	}else{
+		var msj="Esta seguro de guardar los cambios?";
+	}
+
+	bootbox.confirm({
+		title: "Mensaje",
+		message: msj,
+		buttons: {
+			cancel: {
+				label: '<i class="fa fa-times"></i> Cancelar'
+			},
+			confirm: {
+				label: '<i class="fa fa-check"></i> Aceptar'
+			}
+		},
+		callback: function (result) {
+			//console.log('This was logged in the callback: ' + result);
+			if (result){
+				//Grabar
+				//var formData = new FormData($("#frmestablecimiento")[0]);
+				if ($('#maneja_lotes').is(':checked')){
+					var maneja_lote='1';
+				}else{
+					var maneja_lote='0';
+				}
+
+				var parametros = {
+					"id_item":$('#id_item').val(),
+					"nombre":$('#nombre').val().toUpperCase(),
+					"id_empresa": $('#id_empresa').val(),
+					"id_marca": $('#id_marca').val(),
+					"id_categoria": $('#id_categoria').val(),
+					"id_ums": $("#id_ums").val(),
+					"id_umi": $("#id_umi").val(),
+					"factor": $("#factor").val(),
+					"precio_compra": $("#precio_compra").val(),
+					"maneja_lote": maneja_lote
+					};
+
+
+				$.ajax({
+					url: "../ajax/items.php?op=guardaryeditar",
+					type: "POST",
+					data: parametros,
+					//contentType: false,
+					//processData: false,
+
+					success: function(datos)
+					{
+						bootbox.alert(datos);
+						//mostrarform(false);
+						$('#modalNew').modal('toggle')
+						table.ajax.reload();
+					}
+
+				});
+
+
+			}
+		}
+	});
+
+}
+
+function guardaryeditar_local()
+{
+	if ($("#id_local").val()==''){
+		var msj="Esta seguro de guardar el nuevo registro?";
+	}else{
+		var msj="Esta seguro de guardar los cambios?";
+	}
+
+	bootbox.confirm({
+		title: "Mensaje",
+		message: msj,
+		buttons: {
+			cancel: {
+				label: '<i class="fa fa-times"></i> Cancelar'
+			},
+			confirm: {
+				label: '<i class="fa fa-check"></i> Aceptar'
+			}
+		},
+		callback: function (result) {
+			//console.log('This was logged in the callback: ' + result);
+			if (result){
+				//Grabar
+				//var formData = new FormData($("#frmestablecimiento")[0]);
+
+				var parametros = {
+					"id_local":$('#id_local').val(),
+					"id_empresa":$('#id_empresa_local').val(),
+					"nombre":$('#nombre_local').val().toUpperCase(),
+					"direccion": $('#direccion_local').val().toUpperCase(),
+					"celular": $('#celular_local').val().toUpperCase(),
+					"telefono_fijo": $('#telefono_fijo_local').val(),
+					"id_ubigeo": $("#id_ubigeo_local").val()
+					};
+
+
+				$.ajax({
+					url: "../ajax/local.php?op=guardaryeditar",
+					type: "POST",
+					data: parametros,
+					//contentType: false,
+					//processData: false,
+
+					success: function(datos)
+					{
+
+						//mostrarform(false);
+						$('#modalLocal').modal('toggle')
+						update_child($('#id_empresa_local').val());
+						bootbox.alert(datos);
+
+						//table.ajax.reload();
+					}
+
+				});
+
+
+			}
+		}
+	});
+
+
+	//e.preventDefault(); //No se activará la acción predeterminada del evento
+	/*$("#btnGuardar").prop("disabled",true);*/
+
+
+
+	/*
+	limpiar();*/
+}
+
+function mostrar_compra(id_ingreso)
+{
+	//alert(id_item);
+
+	$.post("../ajax/compra.php?op=mostrar",{id_ingreso : id_ingreso}, function(data, status)
+	{
+		data = JSON.parse(data);
+		$("#id_ingreso").val(id_ingreso);
+
+		$("#id_tipo_documento").val(data.id_tipo_documento);
+		$("#id_empresa").val(data.id_empresa);
+
+		$("#id_orden_compra").val(data.id_orden_compra);
+		$("#nro_orden_compra").val(data.orden);
+		
+		$("#numero_guia").val(data.numero_guia);
+
+		$("#serie_documento").val(data.serie_documento);
+		$("#numero_documento").val(data.numero_documento);
+		$("#fecha_compra").val(data.fecha);
+		$("#id_moneda").val(data.id_moneda);
+		$("#id_forma_pago").val(data.id_forma_pago);
+
+		$("#usuario_creacion").val(data.usuario_crea);
+		$("#fecha_creacion").val(data.fecha_creacion);
+
+		$("#tipo_cambio").val(data.tipo_cambio);
+		$("#porcentaje_igv").val(data.porcentaje_igv);
+		//$("#tipo_cambio").val(data.tipo_cambio);
+
+		listLocales(data.id_local);
+
+		$('#razon_social').append("<option value='"+data.id_proveedor+"' selected='selected'>"+data.razon_social+"</option>");
+ 		$("#razon_social").trigger('change');
+
+ 		$("#id_empresa").prop("disabled",true);
+      	$("#id_local").prop("disabled",true);
+
+      	$('#row_btn_item').hide();
+      	$('#row_tbl_detalle').hide();
+
+ 		/*$("#direccion").val(data.direccion);
+ 		$("#ruc").val(data.ruc);
+ 		$("#telefono_fijo").val(data.telefono_fijo);
+ 		$('#ubigeo').append("<option value='"+data.id_ubigeo+"' selected='selected'>"+data.distrito+"</option>");
+ 		$("#ubigeo").trigger('change');*/
+
+ 		$("#modalTitle").html('Edicion de registro');
+ 		$('#modalNew').modal('show');
+ 	})
+}
+
+function mostrar_local(id_empresa,id_local){
+	//alert(id_empresa);
+	$("#id_empresa_local").val(id_empresa);
+
+	$.post("../ajax/local.php?op=mostrar",{id_local : id_local}, function(data, status)
+	{
+		data = JSON.parse(data);
+		$("#nombre_local").val(data.nombre);
+		$("#id_local").val(id_local);
+ 		$("#direccion_local").val(data.direccion);
+ 		$("#celular_local").val(data.celular);
+ 		$("#telefono_fijo_local").val(data.telefono_fijo);
+ 		$('#id_ubigeo_local').append("<option value='"+data.id_ubigeo+"' selected='selected'>"+data.distrito+"</option>");
+ 		$("#id_ubigeo_local").trigger('change');
+ 		$("#modalLocalTitle").html('Edicion de local');
+ 		$('#modalLocal').modal('show');
+ 	})
+
+}
+
+
+
+//Función para desactivar registros
+function desactivar(id)
+{
+	bootbox.confirm({
+		message: "Está seguro de anular el registro "+id+"?",
+		buttons: {
+			confirm: {
+				label: '<i class="fa fa-check"></i> Si',
+				className: 'btn-success'
+			},
+			cancel: {
+				label: '<i class="fa fa-times"></i> No',
+				className: 'btn-danger'
+			}
+		},
+		callback: function (result) {
+			if(result){
+				$.post("../ajax/ficha_vivienda.php?op=desactivar", {id_ficha : id}, function(e){
+					bootbox.alert(e);
+					table.ajax.reload();
+				});
+			}
+		}
+	});
+}
+
+//Función para activar registros
+function activar(id)
+{
+	/*bootbox.confirm("¿Está Seguro de activar el registro?", function(result){
+		if(result)
+        {
+        	$.post("../ajax/ficha_vivienda.php?op=activar", {id_ficha : id}, function(e){
+        		bootbox.alert(e);
+	            table.ajax.reload();
+        	});
+        }
+	})*/
+	bootbox.confirm({
+		message: "Está seguro de activar el registro "+id+"?",
+		buttons: {
+			confirm: {
+				label: '<i class="fa fa-check"></i> Si',
+				className: 'btn-success'
+			},
+			cancel: {
+				label: '<i class="fa fa-times"></i> No',
+				className: 'btn-danger'
+			}
+		},
+		callback: function (result) {
+			if(result){
+				$.post("../ajax/ficha_vivienda.php?op=activar", {id_ficha : id}, function(e){
+					bootbox.alert(e);
+					table.ajax.reload();
+				});
+			}
+		}
+	});
+}
+function open_local(id_empresa){
+	limpiar_local();
+	$('#id_empresa_local').val(id_empresa)
+	$('#modalLocal').modal('show')
+}
+
+//Función para activar local
+function activar_local(id_empresa,id_local)
+{
+	bootbox.confirm("¿Está Seguro de activar el registro?", function(result){
+		if(result)
+        {
+        	$.post("../ajax/local.php?op=activar", {id_local : id_local}, function(e){
+        		bootbox.alert(e);
+	            update_child(id_empresa);
+        	});
+        }
+	})
+}
+
+//Función para desactivar registros
+function desactivar_local(id_empresa,id_local)
+{
+	bootbox.confirm("¿Está Seguro de desactivar el registro?", function(result){
+		if(result)
+        {
+        	$.post("../ajax/local.php?op=desactivar", {id_local : id_local}, function(e){
+        		bootbox.alert(e);
+	            update_child(id_empresa);
+        	});
+        }
+	})
+}
+
+init();

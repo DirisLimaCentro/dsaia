@@ -1,0 +1,12 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg">
+<metadata>Copyright (C) 2022 by original authors @ fontello.com</metadata>
+<defs>
+<font id="fontello" horiz-adv-x="1000" >
+<font-face font-family="fontello" font-weight="400" font-stretch="normal" units-per-em="1000" ascent="850" descent="-150" />
+<missing-glyph horiz-adv-x="1000" />
+<glyph glyph-name="6510502_corona_covid19_mosquito_virus_icon" unicode="&#xe800;" d="M834 563h-8l-241-20a340 340 0 0 1-10 39l154 51a31 31 0 0 1 21 30v93a31 31 0 0 1-62 0v-71l-141-47a78 78 0 0 1-16 15v103a31 31 0 0 1-62 0v-103a78 78 0 0 1-16-15l-140 47v71a31 31 0 0 1-63 0v-93a31 31 0 0 1 21-30l154-51a340 340 0 0 1-10-40l-238 20a73 73 0 0 1-11 0 103 103 0 1 1 0-206h8l14 0v-120l-85-83a31 31 0 0 1-9-22v-93a31 31 0 0 1 62 0v80l85 85a31 31 0 0 1 9 22v138l160 14c0-11 3-22 5-32l-81-27a31 31 0 0 1-21-30l0-84-88-116a31 31 0 0 1-6-19v-125a31 31 0 0 1 62 0v114l89 117a31 31 0 0 1 5 19l0 71 58 19c15-36 36-59 67-59s52 23 67 59l58-19v-71a31 31 0 0 1 6-19l88-117v-114a31 31 0 0 1 62 0v125a31 31 0 0 1-6 19l-87 116v84a31 31 0 0 1-22 29l-81 27c2 11 3 22 5 32l162-14v-137a31 31 0 0 1 9-22l83-85v-80a31 31 0 0 1 62 0v93a31 31 0 0 1-9 22l-84 85v120l12 0h8a103 103 0 1 1 0 206z m-665-144a39 39 0 0 0-31 11 40 40 0 0 0-13 31 41 41 0 0 0 40 41l242-20c0-12 0-24 0-37 0-1 0-3 0-5z m300 25a494 494 0 0 0 4 62v0s0 0 0 0a212 212 0 0 0 27 91 212 212 0 0 0 28-91s0 0 0 0v0a494 494 0 0 0 3-62c0-86-19-139-31-154-12 15-31 68-31 154z m393-14a41 41 0 0 0-31-11l-237 20c0 1 0 3 0 5 0 12 0 24 0 36l238 20h4a41 41 0 0 0 39-41 40 40 0 0 0-13-29z" horiz-adv-x="1000" />
+</font>
+</defs>
+</svg>

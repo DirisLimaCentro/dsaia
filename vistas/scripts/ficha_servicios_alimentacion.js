@@ -1,0 +1,1303 @@
+var tabla;
+var bTab=false;
+//Función que se ejecuta al inicio
+function open_ficha(id)
+{
+  //alert(id_item);
+
+  $.post("../ajax/ficha_servicios_alimentacion.php?op=mostrar",{id : id}, function(data, status)
+  {
+    
+    //console.log(data);
+    //return false;
+    data = JSON.parse(data);
+    
+        
+
+    $("#id_ficha").val(id);
+    $("#establecimiento").val(data[0].establecimiento);
+    $("#nombre_servicio").val(data[0].nombre_servicio);
+    
+    $("#direccion").val(data[0].direccion);
+
+    $("#fecha_encuesta").val(data[0].fecha_visita);
+    
+    $('#id_ubigeo').append("<option value='"+data[0].id_ubigeo+"' selected='selected'>"+data[0].ubigeo+"</option>");
+    $("#id_ubigeo").trigger('change');
+
+
+    $("#ubicacion_empresa").val(data[0].ubicacion_empresa);
+    $("#responsable_servicio").val(data[0].responsable_servicio);
+    $("#numero_manipuladores").val(data[0].numero_manipuladores);
+
+    $("#id_forma_servicio").val(data[0].id_forma_servicio);
+
+
+    $("#i_1").val(data[0].i_1);
+    $("#i_2").val(data[0].i_2);
+    $("#i_3").val(data[0].i_3);
+    $("#i_4").val(data[0].i_4);
+    $("#i_5").val(data[0].i_5);
+
+
+    $("#ii_1").val(data[0].ii_1);
+    $("#ii_2").val(data[0].ii_2);
+    $("#ii_3").val(data[0].ii_3);
+    $("#ii_4").val(data[0].ii_4);
+    $("#ii_5").val(data[0].ii_5);
+
+
+    $("#iii_1").val(data[0].iii_1);
+    $("#iii_2").val(data[0].iii_2);
+    $("#iii_3").val(data[0].iii_3);
+    $("#iii_4").val(data[0].iii_4);
+    $("#iii_5").val(data[0].iii_5);
+
+    $("#iii_6").val(data[0].iii_6);
+    $("#iii_7").val(data[0].iii_7);
+    $("#iii_8").val(data[0].iii_8);
+    $("#iii_9").val(data[0].iii_9);
+    $("#iii_10").val(data[0].iii_10);
+    $("#iii_11").val(data[0].iii_11);
+    $("#iii_12").val(data[0].iii_12);
+    $("#iii_13").val(data[0].iii_13);
+    $("#iii_14").val(data[0].iii_14);
+    $("#iii_15").val(data[0].iii_15);
+    $("#iii_16").val(data[0].iii_16);
+    $("#iii_17").val(data[0].iii_17);
+    $("#iii_18").val(data[0].iii_18);
+    $("#iii_19").val(data[0].iii_19);
+    $("#iii_20").val(data[0].iii_20);
+    $("#iii_21").val(data[0].iii_21);
+    $("#iii_22").val(data[0].iii_22);
+    $("#iii_23").val(data[0].iii_23);
+    $("#iii_24").val(data[0].iii_24);
+    $("#iii_25").val(data[0].iii_25);
+    $("#iii_26").val(data[0].iii_26);
+
+
+    $("#iv_1").val(data[0].iv_1);
+    $("#iv_2").val(data[0].iv_2);
+    $("#iv_3").val(data[0].iv_3);
+    $("#iv_4").val(data[0].iv_4);
+    $("#iv_5").val(data[0].iv_5);
+    $("#iv_6").val(data[0].iv_6);
+    $("#iv_7").val(data[0].iv_7);
+
+   
+   
+   sum_valores();
+
+    $("#modalTitle").html('Edicion de registro');
+    $('#modalNew').modal('show');
+  })
+}
+
+
+function buscar_persona(){
+	$("#loaderModal").show();
+	$.ajax({
+		url: "../ajax/persona.php",
+		dataType: "json",
+		method: "get",
+		async : false,
+		data: {
+			op: "buscar_id",
+			tipo_doc: $("#tipo_doc").val(),
+			numero_doc: $("#numero_doc").val()
+		},
+		beforeSend: function () {
+        
+    	},
+    	success: function (result) {
+
+    			$("#loaderModal").hide();
+    			if (result.msj=='') {
+    				$("#id_persona").val(result.id);
+    				$("#nombres").val(result.nombres);
+    				$("#ape_paterno").val(result.ape_paterno);
+
+    				$("#ape_materno").val(result.ape_materno);
+    				$("#direccion_persona").val(result.direccion);
+    				    				
+    				$('#ubigeo_persona').append("<option value='"+result.id_ubigeo+"' selected='selected'>"+result.distrito+"</option>");
+ 					$("#ubigeo_persona").trigger('change');
+
+ 					$("#btnFindPersona").prop("disabled",true);
+ 					$("#numero_doc").prop("disabled",true);
+
+                 
+                }else{
+                	buscar_reniec()	
+                }
+
+        },
+        timeout: 12000, // sets timeout to 30 seconds
+        error: function (request, status, err) {
+          	$("#loaderModal").hide();
+          	if (status == "timeout") {
+                    //showMessage("Su petición demoro mas de lo permitido", "error");
+                    alert("Su petición demoro mas de lo permitido");
+            } else {
+                    //showMessage("ocurrio un error en su petición.", "error");
+                    alert("ocurrio un error en su petición.");
+            }
+         }
+    });	
+}
+
+
+function buscar_reniec(){
+
+	$("#loaderModal").show();
+	$.ajax({
+		url: "../ajax/services.php",
+		dataType: "json",
+		method: "get",
+		async : false,
+		data: {
+			accion: "LOAD_RENIEC",
+			numero_documento: $("#numero_doc").val()
+		},
+		beforeSend: function () {
+        //$("#dialog-sunat").dialog("open");
+    	},
+    	success: function (result) {
+                //$("#loaderRUC").hide();
+                /*if (result.success) {
+                    $("#txtorganizacion").val(result.result.razon_social);
+                } else {
+                    showMessage("Ingrese nro ruc válido", "error");
+                }*/
+                $("#loaderModal").hide();
+                if (result.error=='') {
+                	var dataPersona = result.row;
+                	$("#nombres").val(dataPersona.nombres);
+                	$("#ape_paterno").val(dataPersona.apellido_paterno);
+                	$("#ape_materno").val(dataPersona.apellido_materno);
+                	
+                	$("#direccion_persona").val(dataPersona.domicilio_direccion_actual+' '+dataPersona.domicilio_direccion);
+    					
+                }else{
+                	alert("Ocurrio un error en la busqueda");
+                }
+
+          },
+          timeout: 12000, // sets timeout to 30 seconds
+          error: function (request, status, err) {
+            	$("#loaderModal").hide();
+            	if (status == "timeout") {
+                    //showMessage("Su petición demoro mas de lo permitido", "error");
+                    alert("Su petición demoro mas de lo permitido");
+                } else {
+                    //showMessage("ocurrio un error en su petición.", "error");
+                    alert("ocurrio un error en su petición.");
+                }
+          }
+    });
+
+}
+
+
+
+function buscar_entidad(){
+	$("#loaderModal").show();
+	$.ajax({
+		url: "../ajax/entidad.php",
+		dataType: "json",
+		method: "get",
+		async : false,
+		data: {
+			op: "buscar_id",
+			ruc: $("#ruc").val(),
+		},
+		beforeSend: function () {
+        
+    	},
+    	success: function (result) {
+
+    			$("#loaderModal").hide();
+    			if (result.msj=='') {
+    				$("#razon_social").val(result.nombre);
+    				$("#direccion_empresa").val(result.direccion);
+
+    				$("#telefono_fijo_empresa").val(result.telefono_fijo);
+    				$("#celular_empresa").val(result.celular);
+    				$("#email_empresa").val(result.e_mail);
+
+    				$("#id_entidad").val(result.id);
+
+    			$('#ubigeo').append("<option value='"+result.id_ubigeo+"' selected='selected'>"+result.distrito+"</option>");
+ 					$("#ubigeo").trigger('change');
+
+ 					$("#btnfindRuc").prop("disabled",true);
+ 					$("#ruc").prop("disabled",true);
+
+                 
+                }else{
+                	buscar_sunat()	
+                }
+
+        },
+        timeout: 12000, // sets timeout to 30 seconds
+        error: function (request, status, err) {
+          	$("#loaderModal").hide();
+          	if (status == "timeout") {
+                    //showMessage("Su petición demoro mas de lo permitido", "error");
+                    alert("Su petición demoro mas de lo permitido");
+            } else {
+                    //showMessage("ocurrio un error en su petición.", "error");
+                    alert("ocurrio un error en su petición.");
+            }
+         }
+    });	
+}
+function buscar_sunat(){
+
+
+	$("#loaderModal").show();
+	$.ajax({
+		url: "../ajax/services.php",
+		dataType: "json",
+		method: "get",
+		async : false,
+		data: {
+			accion: "LOAD_SUNAT",
+			ruc: $("#ruc").val(),
+		},
+		beforeSend: function () {
+        //$("#dialog-sunat").dialog("open");
+    	},
+    	success: function (result) {
+                //$("#loaderRUC").hide();
+                /*if (result.success) {
+                    $("#txtorganizacion").val(result.result.razon_social);
+                } else {
+                    showMessage("Ingrese nro ruc válido", "error");
+                }*/
+                $("#loaderModal").hide();
+                if (result.msj=='') {
+                	$("#razon_social").val(result.razon_social);
+                	$("#direccion_empresa").val(result.direccion);
+                    //$("#nombre_comercial").val(result.result.nombre_comercial);
+                }else{
+                	alert("Ocurrio un error en la busqueda");
+                }
+
+          },
+          timeout: 12000, // sets timeout to 30 seconds
+          error: function (request, status, err) {
+            	$("#loaderModal").hide();
+            	if (status == "timeout") {
+                    //showMessage("Su petición demoro mas de lo permitido", "error");
+                    alert("Su petición demoro mas de lo permitido");
+                } else {
+                    //showMessage("ocurrio un error en su petición.", "error");
+                    alert("ocurrio un error en su petición.");
+                }
+          }
+    });
+}
+function delete_localidad(id){
+	bootbox.confirm({
+		message: "Está seguro de eliminar el registro seleccionado?",
+		buttons: {
+			confirm: {
+				label: '<i class="fa fa-check"></i> Si',
+				className: 'btn-success'
+			},
+			cancel: {
+				label: '<i class="fa fa-times"></i> No',
+				className: 'btn-danger'
+			}
+		},
+		callback: function (result) {
+			if(result){
+				$.post("../ajax/empresa.php?op=deleteLocalidad", {id_localidad : id}, function(e){
+					bootbox.alert(e);
+					tblReq.ajax.reload();
+				});
+			}
+		}
+	});
+}
+function new_localidad(){
+	$("#id_localidad").val('0');
+	$("#nombre_localidad").val('');
+	$("#sector").val('');
+	$("#cnt_viviendas").val('0');
+	$('#modalNewLocalidad').modal('show');	
+}
+function show_localidad(id){
+	$.post("../ajax/empresa.php?op=mostrarLocalidad",{id_localidad : id}, function(data, status)
+	{
+		data = JSON.parse(data);
+		$("#nombre_localidad").val(data.descripcion);
+		$("#sector").val(data.sector);
+		$("#cnt_viviendas").val(data.cnt_viviendas);
+		$("#id_localidad").val(id);
+		$('#modalNewLocalidad').modal('show');
+	});
+}
+
+function saveLocalidad(){
+	if ($("#sector").val()==''){
+		return bootbox.alert('Ingrese sector');
+	}
+	if ($("#nombre_localidad").val()==''){
+		return bootbox.alert('Ingrese nombre localidad');
+	}
+	if ($("#cnt_viviendas").val()==''){
+		return bootbox.alert('Ingrese 0 o un valor valido en viviendas');
+	}
+
+
+	bootbox.confirm({
+		title: "Mensaje",
+		message: "Esta seguro de guardar el registro?",
+		buttons: {
+			cancel: {
+				label: '<i class="fa fa-times"></i> Cancelar'
+			},
+			confirm: {
+				label: '<i class="fa fa-check"></i> Aceptar',
+				className: 'btn-success'
+			}
+		},
+		callback: function (result) {
+			//console.log('This was logged in the callback: ' + result);
+			if (result){
+				//Grabar
+				//var formData = new FormData($("#frmestablecimiento")[0]);
+
+				var parametros = {
+					"id_localidad": $("#id_localidad").val(),
+					"id_local":$('#id_local').val(),
+					"sector": $("#sector").val(),
+					"nombre":$('#nombre_localidad').val().toUpperCase(),					
+					"cnt_viviendas": $("#cnt_viviendas").val(),
+					"id_usuario": $("#s_id_usuario").val()
+					};
+
+
+				$.ajax({
+					url: "../ajax/empresa.php?op=saveLocalidad",
+					type: "POST",
+					data: parametros,
+					//contentType: false,
+					//processData: false,
+
+					success: function(msg)
+					{
+						//bootbox.alert(datos);
+						//mostrarform(false);
+						 var amsg=msg.split('|');
+		                  var nerror=amsg[0];
+		                  if (nerror=='0'){
+		                    return bootbox.alert('Ocurrio un error: '+amsg[1]);
+		                  }else{
+		                    $('#modalNewLocalidad').modal('toggle')
+		                    bootbox.alert('Registro guardado');
+		                  }
+						
+						tblReq.ajax.reload();
+					}
+
+				});
+
+
+			}
+		}
+	});
+
+}
+function listLocalidades(id_establecimiento){
+	$("#id_local").val(id_establecimiento);
+	if (bTab==true){
+
+		  tblReq.ajax.reload();
+          //tblReq.destroy();
+          return false;
+    }  
+     bTab=true;     
+  $('#tbllocalidades thead tr').clone(true).appendTo('#tbllocalidades thead');
+  $('#tbllocalidades thead tr:eq(1) th').each(function(i) {
+    var title = $(this).text();
+    if (title != '' && title != 'Acciones' && title != 'Fecha Aut' && title!='Atendido') {
+      $(this).html('<input style="width:100%;" type="text" class="form-control input-sm" placeholder="Buscar ' + title + '" />');
+    } else {
+      $(this).html('');
+    }
+    $('input', this).on('keyup change', function() {
+      if (tblReq.column(i).search() !== this.value) {
+        tblReq
+          .column(i)
+          .search(this.value)
+          .draw();
+      }
+    });
+  });
+  tblReq = $('#tbllocalidades').DataTable({
+    //dom: "ltip",
+    dom: "Bltip",
+		
+		"buttons": [
+      {
+          text: '<i class="glyphicon glyphicon-plus"></i> Nuevo',
+          className: "btn btn-info btn-sm",
+          action: function ( e, dt, node, config ) {
+              new_localidad();
+          }
+ 
+      }
+      ],
+
+
+    orderCellsTop: true,
+    fixedHeader: true,
+    "lengthMenu": [5, 10, 25, 75, 100], //mostramos el menú de registros a revisar
+    "bProcessing": true, //Activamos el procesamiento del datatables
+    "bJQueryUI": false,
+    //"responsive": true,
+    "bInfo": true,
+    "bFilter": true,
+    "bServerSide": true, //Paginación y filtrado realizados por el servidor
+    "sServerMethod": "GET",
+    //dom: '<Bl<f>rtip>', //Definimos los elementos del control de tabla
+    /*buttons: [
+      'copyHtml5',
+      'excelHtml5',
+      'csvHtml5',
+      'pdf'
+    ],*/
+    "sAjaxSource": "../ajax/empresa.php?op=listarLocalidades", // Load Data
+
+    "fnServerParams": function ( aoData ) {
+    	aoData.push( { "name": "id_establecimiento", "value": $('#id_local').val() }
+    		
+    		);
+    },	
+    /*"ajax":
+        {
+          url: '../ajax/establecimiento.php?op=listar',
+          type : "get",
+          dataType : "json",
+          error: function(e){
+            console.log(e.responseText);
+          }
+        },*/
+        "language": {
+          "url": "../public/datatables.net.languages/Spanish.json",
+          "info": "Mostrando _PAGE_ a _PAGES_ de _TOTAL_ registros",
+          "lengthMenu": "Mostrar : _MENU_ registros",
+          "search": '<i class="fa fa-search"></i>',
+            "paginate": {
+
+                "previous": '<i class="fa fa-angle-left"></i>',
+                "next": '<i class="fa fa-angle-right"></i>'
+              },
+
+              "buttons": {
+                "copyTitle": "Tabla Copiada",
+                "copySuccess": {
+                  _: '%d líneas copiadas',
+                  1: '1 línea copiada'
+                }
+              }
+            },
+    "bDestroy": true,
+
+    "columnDefs": [
+
+      {
+       "orderable": false,
+        "targets": 0,
+        "searchable": false
+      },
+      {
+        "orderable": true,
+        "targets": 1,
+        "searchable": true
+      },
+      {
+        "orderable": true,
+        "targets": 2,
+        "searchable": true
+      },
+      {
+        "orderable": true,
+        "targets": 3,
+        "searchable": true
+      }
+
+    ],
+    fixedColumns: true,
+    initComplete: function() {
+      tblReq.columns().every(function() {
+        var that = this;
+        $('input', this.footer()).on('keyup change', function() {
+          that
+            .search(this.value)
+            .draw();
+        });
+      });
+    },
+    columns: [
+    	
+      { aTargets: 'l.id' ,"width": "5%"},     
+      { aTargets: 'sec.descripcion',"width": "5%",  },
+      { aTargets: 'l.descripcion',"width": "80%",  },
+      { aTargets: 'l.cnt_viviendas',"width": "10%" }    
+      
+      
+    ],
+
+    "pagingType": 'full_numbers',
+    "iDisplayLength": 5, //Paginación
+    "order": [
+      [2, "asc"]
+    ] //Ordenar (columna,orden)
+
+  });
+
+
+  $('#tbllocalidades').removeClass('display').addClass('table table-striped table-bordered');
+
+  $('#tbllocalidades tfoot th').each(function() {
+    //Agar kolom Action Tidak Ada Tombol Pencarian
+    if ($(this).text() != "" && $(this).text() != "Acciones" && $(this).text() != "Atendido" && $(this).text() != "Fecha Aut") {
+      var title = $('#tbllocalidades thead th').eq($(this).index()).text();
+      $(this).html('<input class="form-control input-sm" type="text" placeholder="Buscar ' + title + '" style="width:100%;" />');
+    }
+  });
+
+
+  
+}
+function init(){
+	//mostrarform(false);
+
+	listar();
+
+	/*$("#frmestablecimiento").on("submit",function(e)
+	{
+		guardaryeditar(e);
+	});*/
+
+	/*$("#frmestablecimiento").submit(function(e){
+		guardaryeditar(e);
+	});*/
+
+    //$('#mTablas').addClass("treeview active");
+    //$('#lEstablecimientos').addClass("active");
+
+}
+//Función limpiar_modal_local
+//Función limpiar
+function show_localidades(id_establecimiento){
+	//$("#modalTitleLocalidad").html('Localidades: '+nombre);
+	listLocalidades(id_establecimiento);
+ 	$('#modalLocalidades').modal('show');
+}
+function limpiar_local()
+{
+	$("#modalLocalTitle").html('Nuevo registro');
+	$("#id_local").val("");
+	$("#nombre_local").val("");
+	$("#direccion_local").val("");
+	$('#id_ubigeo_local').val('').trigger('change.select2');
+	$("#celular_local").val("");
+	$("#telefono_fijo_local").val("");
+
+}
+
+function limpiar()
+{
+	$("#modalTitle").html('Nuevo registro');
+	$("#id_ficha").val("");
+	
+	//$("#fecha_encuesta").val("");
+
+  $("#nombre_servicio").val("");
+  $("#numero_manipuladores").val("0");  
+  $("#direccion").val("");
+  $("#ubicacion_empresa").val("");
+
+  $("#responsable_servicio").val("");
+  $("#id_forma_servicio").val("");
+
+     
+  $('#id_ubigeo').val('').trigger('change.select2');
+ 
+  $('.text-right').val('0');
+  sum_valores();
+  
+
+
+}
+
+
+//Función mostrar formulario
+function mostrarform(flag)
+{
+	limpiar();
+	if (flag)
+	{
+		$("#listadoregistros").hide();
+		$("#formularioregistros").show();
+		$("#btnGuardar").prop("disabled",false);
+		$("#btnagregar").hide();
+	}
+	else
+	{
+		$("#listadoregistros").show();
+		$("#formularioregistros").hide();
+		$("#btnagregar").show();
+	}
+}
+
+//Función cancelarform
+function cancelarform()
+{
+	limpiar();
+	mostrarform(false);
+}
+
+function createDataTable(id){
+	tbl="dt"+id;
+	dt=$('#'+tbl).DataTable({
+		dom: "lftip",
+		orderCellsTop: true,
+		fixedHeader: true,
+		fixedColumns: true,
+		"lengthChange": true,
+		"lengthMenu": [ 5, 10, 25, 75, 100],
+		"bProcessing": true,
+		"bJQueryUI": false,
+		"responsive": true,            
+		"bInfo": true,
+		"bFilter": true,
+		language: {
+			"url": "../public/datatables.net.languages/Spanish.json",
+			"lengthMenu": '_MENU_ entries per page',
+			"search": '<i class="fa fa-search"></i>',
+			"paginate": {
+				"previous": '<i class="fa fa-angle-left"></i>',
+				"next": '<i class="fa fa-angle-right"></i>'
+			},
+		},
+
+		"bDestroy": true,
+
+		"columnDefs": [
+		{ "orderable": false, "targets": 0, "searchable": false,"width": "12%" },
+		{ "orderable": true, "targets": 1, "searchable": true },
+	{ "orderable": true, "targets": 2, "searchable": true /*, className: "wrapok"*/},
+	{ "orderable": true, "targets": 3, "searchable": false },
+	{ "orderable": true, "targets": 4, "searchable": false },
+	{ "orderable": true, "targets": 5, "searchable": false },
+	{ "orderable": true, "targets": 6, "searchable": false }
+	//{ "orderable": true, "targets": 7, "searchable": false }
+
+
+	],  
+
+	/*columns: [
+		{
+			className: 'details-control',
+			defaultContent: '',
+			data: null,
+			orderable: false,
+			defaultContent: '' 
+		}
+	],*/
+
+
+	"pagingType": 'numbers',
+	"bAutoWidth": false ,
+	"iDisplayLength": 10
+});
+}
+
+//Actualiza child row
+function update_child(row){
+	var parametros = {"id_empresa":row};
+	$.ajax( {
+		url: '../ajax/empresa.php?op=tableLocales',
+		data:  parametros,
+		dataType: 'html',
+		success: function ( json ) {
+			$("#row_"+row).html( json );	
+			createDataTable(row);		
+		}
+	} );
+}
+
+//Función Listar
+function listar()
+{
+	function format ( rowData ) {
+		var parametros = {"id_empresa":rowData[0]};
+		var div = $("<div id='row_"+rowData[0]+"' >")
+		.addClass( 'Cargando' )
+		.text( 'Cargando...' );
+		$.ajax( {
+			url: '../ajax/empresa.php?op=tableLocales',
+			data:  parametros,
+			dataType: 'html',
+			success: function ( json ) {
+				div
+				.html( json )
+				.removeClass( 'loading' );
+				createDataTable(rowData[0]);
+
+			}
+		} );
+
+		return div;
+		//alert('hola');
+	}
+
+
+  $('#tbllistado thead tr').clone(true).appendTo( '#tbllistado thead' );
+    $('#tbllistado thead tr:eq(1) th').each( function (i) {
+        var title = $(this).text();
+        if (title!='' && $.trim(title)!='Acciones' && title!='Fecha Inicio' && title!='Fecha Termino' && title!='Fecha Crea'){
+          $(this).html( '<input style="width:100%;" type="text" class="form-control input-sm" placeholder="Buscar '+title+'" />' );
+    }else{
+      $(this).html('');
+    }
+        $( 'input', this ).on( 'keyup change', function () {
+            if ( table.column(i).search() !== this.value ) {
+                table
+                    .column(i)
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    } );
+
+	table=$('#tbllistado').DataTable(
+	{
+		
+		dom: "Bltip",
+		
+	"buttons": [
+      {
+          text: '<i class="glyphicon glyphicon-plus"></i> Nuevo',
+          className: "btn btn-success btn-sm",
+          action: function ( e, dt, node, config ) {
+              ver();
+          }
+ 
+      }
+      ],
+
+
+		"lengthMenu": [ 5, 10, 25, 75, 100],//mostramos el menú de registros a revisar
+		"bProcessing": true,//Activamos el procesamiento del datatables
+		"bJQueryUI": false,
+		"responsive": true,
+		"bInfo": true,
+		"bFilter": true,
+	    "bServerSide": true,//Paginación y filtrado realizados por el servidor
+	    "sServerMethod": "GET",
+
+
+
+	    //dom: '<Bl<f>rtip>',//Definimos los elementos del control de tabla
+	    /*buttons: [
+	    	 {
+		    	text: 'Nuevo',
+		    	//className: "btn",
+		    	action: function ( e, dt, node, config ) {
+		    		ver();
+		    	}
+		    }	,
+
+		    {
+		    	extend:    'copyHtml5',
+		    	text:      '<i class="fa fa-files-o"></i>',
+		    	titleAttr: 'Copy'
+		    },
+		    {
+		    	extend:    'excelHtml5',
+		    	text:      '<i class="fa fa-file-excel-o"></i>',
+		    	titleAttr: 'Excel'
+		    },
+		    {
+		    	extend:    'csvHtml5',
+		    	text:      '<i class="fa fa-file-text-o"></i>',
+		    	titleAttr: 'CSV'
+		    },
+		    {
+		    	extend:    'pdfHtml5',
+		    	text:      '<i class="fa fa-file-pdf-o"></i>',
+		    	titleAttr: 'PDF'
+		    }
+
+
+
+	    ],*/
+      	"sAjaxSource": "../ajax/ficha_servicios_alimentacion.php?op=listar&id_nivel="+$("#s_id_nivel").val()+"&id_usuario="+$("#s_id_usuario").val()+"&id_local="+$("#s_id_local").val(), // Load Data
+
+		/*"ajax":
+				{
+					url: '../ajax/establecimiento.php?op=listar',
+					type : "get",
+					dataType : "json",
+					error: function(e){
+						console.log(e.responseText);
+					}
+				},*/
+				"language": {
+					"lengthMenu": "Mostrar : _MENU_ registros",
+					"search": '<i class="fa fa-search"></i>',
+            "paginate": {
+								"previous": '<i class="fa fa-angle-left"></i>',
+								"next": '<i class="fa fa-angle-right"></i>'
+							},
+
+							"buttons": {
+								"copyTitle": "Tabla Copiada",
+								"copySuccess": {
+									_: '%d líneas copiadas',
+									1: '1 línea copiada'
+								}
+							}
+						},
+		"bDestroy": true,
+
+		"columnDefs": [
+		{ "orderable": false,	"targets": 0,	"searchable": false },
+		{ 'width':'2%', "orderable": true,	"targets": 1,	"searchable": true },
+		{ "orderable": false,	"targets": 2,	"searchable": false },
+		{ "orderable": false,	"targets": 3,	"searchable": false }
+		],
+
+		"createdRow": function( row, data, dataIndex){
+			if( data[9] ==  'f'){
+        $(row).addClass('danger')        
+      }
+
+		},
+
+    initComplete: function () {
+      $('.dt-buttons').removeClass('btn-group'); 
+      table.columns().every( function () {
+        var that = this;
+        $( 'input', this.footer() ).on( 'keyup change', function () {
+          that
+          .search( this.value )
+          .draw();
+        } );
+      } );
+    },
+
+		columns: [
+			/*{
+			className: 'details-control',
+			defaultContent: '',
+			data: null,
+			orderable: false,
+			defaultContent: '' },*/
+
+			//{ aTargets: null },
+			{ aTargets: 'f.id' },
+			{ aTargets: 'l.nombre' },
+			{ aTargets: 'f.id' },
+			{ aTargets: 'f.fecha' },
+			{ aTargets: 'f.nombre_servicio' },
+			{ aTargets: 'fs.descripcion' },
+			{ aTargets: 'f.numero_manipuladores' },
+			{ aTargets: 'uc.login' },
+			{ aTargets: 'f.fecha_creacion' }
+
+			],
+
+		"pagingType": 'full_numbers',
+		"iDisplayLength": 10,//Paginación
+	    "order": [[ 8, "des" ]]//Ordenar (columna,orden)
+
+	});
+
+
+	$('#tbllistado tbody').on('click', 'td.details-control', function () {
+		var tr = $(this).closest('tr');
+		var row = table.row( tr );
+
+		if ( row.child.isShown() ) {
+			row.child.hide();
+			tr.removeClass('shown');
+			//tr.find('svg').attr('data-icon', 'plus-circle');
+		}
+		else {
+			row.child( format(row.data()) ).show();
+			tr.addClass('shown');
+			//tr.find('svg').attr('data-icon', 'minus-circle');
+		}
+	} );
+
+
+	/*$('.buttons-excel, .buttons-print').each(function() {
+	   $(this).removeClass('btn-default').addClass('btn-primary')
+	})*/
+
+
+}
+//Función para guardar o editar
+
+function guardaryeditar()
+{
+	msj="";
+	/*if ($("#ruc").val()==''){
+    	msj="Ingrese RUC del establecimiento";
+  	}else if(){
+
+  	}*/
+
+
+	if ($("#fecha_encuesta").val()==''){
+		var msj="Ingrese fecha de registro";
+	}else if ($("#nombre_servicio").val()==''){
+		var msj="Ingrese nombre del servicio";
+	}else if ($("#direccion").val()==''){
+    var msj="Ingrese direccion del servicio";
+  }else if ($("#id_ubigeo").val()==''){
+    var msj="Ingrese distrito";
+  }else if ($("#ubicacion_empresa").val()==''){
+    var msj="Ingrese ubicacion de empresa";
+  }else if ($("#responsable_servicio").val()==''){
+    var msj="Ingrese responsable del servicio";
+  }else if ($("#numero_manipuladores").val()==''){
+    var msj="Ingrese numero de manipuladores";
+  }else if ($("#id_forma_servicio").val()==''){
+    var msj="Ingrese forma de servicio";
+  }
+
+  if (msj){
+    return bootbox.alert(msj);
+  }
+
+
+
+
+	bootbox.confirm({
+		title: "Mensaje",
+		message: "Esta seguro de guardar el registro?",
+		buttons: {
+			cancel: {
+				label: '<i class="fa fa-times"></i> Cancelar'
+			},
+			confirm: {
+				label: '<i class="fa fa-check"></i> Grabar',
+				className: 'btn-success'
+			}
+		},
+		callback: function (result) {
+			
+			if (result){
+				
+				var parametros = {
+          "id_ficha":($("#id_ficha").val()=='')?'0':$("#id_ficha").val(),           
+          "id_local": $("#s_id_local").val(),
+          "id_usuario": $("#s_id_usuario").val(),
+
+					"id_ubigeo":$("#id_ubigeo").val(),          
+          "nombre_servicio":$('#nombre_servicio').val().toUpperCase(),
+					"direccion":$('#direccion').val().toUpperCase(),          
+					"numero_manipuladores": $('#numero_manipuladores').val().toUpperCase(),								
+					"ubicacion_empresa": $("#ubicacion_empresa").val().toUpperCase(),
+          "responsable_servicio": $("#responsable_servicio").val().toUpperCase(),
+          "id_forma_servicio": $("#id_forma_servicio").val().toUpperCase(),
+          "fecha": $("#fecha_encuesta").val(),
+          
+
+          "i_1": $('#i_1').val(),
+          "i_2": $('#i_2').val(),
+          "i_3": $('#i_3').val(),
+          "i_4": $('#i_4').val(),
+          "i_5": $('#i_5').val(),
+          
+          "ii_1": $('#ii_1').val(),
+          "ii_2": $('#ii_2').val(),
+          "ii_3": $('#ii_3').val(),
+          "ii_4": $('#ii_4').val(),
+          "ii_5": $('#ii_5').val(),
+         
+          "iii_1": $('#iii_1').val(),
+          "iii_2": $('#iii_2').val(),
+          "iii_3": $('#iii_3').val(),
+          "iii_4": $('#iii_4').val(),
+          "iii_5": $('#iii_5').val(),
+
+          "iii_6": $('#iii_6').val(),
+          "iii_7": $('#iii_7').val(),
+          "iii_8": $('#iii_8').val(),
+          "iii_9": $('#iii_9').val(),
+          "iii_10": $('#iii_10').val(),
+          "iii_11": $('#iii_11').val(),
+          "iii_12": $('#iii_12').val(),
+          "iii_13": $('#iii_13').val(),
+          "iii_14": $('#iii_14').val(),
+          "iii_15": $('#iii_15').val(),
+          "iii_16": $('#iii_16').val(),
+          "iii_17": $('#iii_17').val(),
+          "iii_18": $('#iii_18').val(),
+          "iii_19": $('#iii_19').val(),
+          "iii_20": $('#iii_20').val(),
+          "iii_21": $('#iii_21').val(),
+          "iii_22": $('#iii_22').val(),
+          "iii_23": $('#iii_23').val(),
+          "iii_24": $('#iii_24').val(),
+          "iii_25": $('#iii_25').val(),
+          "iii_26": $('#iii_26').val(),
+
+          "iv_1": $('#iv_1').val(),
+          "iv_2": $('#iv_2').val(),
+          "iv_3": $('#iv_3').val(),
+          "iv_4": $('#iv_4').val(),
+          "iv_5": $('#iv_5').val(),
+          "iv_6": $('#iv_6').val(),
+          "iv_7": $('#iv_7').val()           
+          
+
+					};
+
+
+				$.ajax({
+					url: "../ajax/ficha_servicios_alimentacion.php?op=save",
+					type: "POST",
+					data: parametros,
+					//contentType: false,
+					//processData: false,
+
+					success: function(msg)
+					{
+						//bootbox.alert(datos);
+						//mostrarform(false);
+						//$('#modalNew').modal('toggle')
+
+						table.ajax.reload();
+            var amsg=msg.split('|');
+            var nerror=amsg[0];
+            if (nerror=='0'){
+              bootbox.alert('Ocurrio un error: '+amsg[1]);
+            }else{
+              $('#modalNew').modal('toggle');
+              bootbox.alert('Registro guardado');
+            }
+
+					}
+
+				});
+
+
+			}
+		}
+	});
+
+}
+
+function guardaryeditar_local()
+{
+	if ($("#nombre_local").val()==''){
+    	bootbox.alert('Ingrese nombre del local');
+    	return false;
+  	}
+	if ($("#id_local").val()==''){
+		var msj="Esta seguro de guardar el nuevo registro?";
+	}else{
+		var msj="Esta seguro de guardar los cambios?";
+	}
+
+	bootbox.confirm({
+		title: "Mensaje",
+		message: msj,
+		buttons: {
+			cancel: {
+				label: '<i class="fa fa-times"></i> Cancelar'
+			},
+			confirm: {
+				label: '<i class="fa fa-check"></i> Aceptar'
+			}
+		},
+		callback: function (result) {
+			//console.log('This was logged in the callback: ' + result);
+			if (result){
+				//Grabar
+				//var formData = new FormData($("#frmestablecimiento")[0]);
+
+				var parametros = {
+					"id_local":$('#id_local').val(),
+					"id_empresa":$('#id_empresa_local').val(),
+					"nombre":$('#nombre_local').val().toUpperCase(),
+					"direccion": $('#direccion_local').val().toUpperCase(),
+					"celular": $('#celular_local').val().toUpperCase(),
+					"telefono_fijo": $('#telefono_fijo_local').val(),
+					"id_ubigeo": $("#id_ubigeo_local").val()
+					};
+
+
+				$.ajax({
+					url: "../ajax/local.php?op=guardaryeditar",
+					type: "POST",
+					data: parametros,
+					//contentType: false,
+					//processData: false,
+
+					success: function(datos)
+					{
+
+						//mostrarform(false);
+						$('#modalLocal').modal('toggle')
+						update_child($('#id_empresa_local').val());
+						bootbox.alert(datos);
+
+						//table.ajax.reload();
+					}
+
+				});
+
+
+			}
+		}
+	});
+
+
+	//e.preventDefault(); //No se activará la acción predeterminada del evento
+	/*$("#btnGuardar").prop("disabled",true);*/
+
+
+
+	/*
+	limpiar();*/
+}
+
+function mostrar(id_empresa)
+{
+	$.post("../ajax/empresa.php?op=mostrar",{id_empresa : id_empresa}, function(data, status)
+	{
+		data = JSON.parse(data);
+		$("#nombre").val(data.nombre);
+		$("#id_empresa").val(id_empresa);
+ 		$("#direccion").val(data.direccion);
+ 		$("#ruc").val(data.ruc);
+ 		$("#telefono_fijo").val(data.telefono_fijo);
+ 		$('#ubigeo').append("<option value='"+data.id_ubigeo+"' selected='selected'>"+data.distrito+"</option>");
+ 		$("#ubigeo").trigger('change');
+ 		$("#modalTitle").html('Edicion de registro');
+ 		$('#modalNew').modal('show');
+ 	})
+}
+
+function mostrar_local(id_empresa,id_local){
+	//alert(id_empresa);
+	$("#id_empresa_local").val(id_empresa);
+
+	$.post("../ajax/local.php?op=mostrar",{id_local : id_local}, function(data, status)
+	{
+		data = JSON.parse(data);
+		$("#nombre_local").val(data.nombre);
+		$("#id_local").val(id_local);
+ 		$("#direccion_local").val(data.direccion);
+ 		$("#celular_local").val(data.celular);
+ 		$("#telefono_fijo_local").val(data.telefono_fijo);
+ 		$('#id_ubigeo_local').append("<option value='"+data.id_ubigeo+"' selected='selected'>"+data.distrito+"</option>");
+ 		$("#id_ubigeo_local").trigger('change');
+ 		$("#modalLocalTitle").html('Edicion de local');
+ 		$('#modalLocal').modal('show');
+ 	})
+
+}
+
+
+
+//Función para desactivar registros
+function desactivar(id)
+{
+  bootbox.confirm({
+    message: "Está seguro de anular el registro "+id+"?",
+    buttons: {
+      confirm: {
+        label: '<i class="fa fa-check"></i> Si',
+        className: 'btn-success'
+      },
+      cancel: {
+        label: '<i class="fa fa-times"></i> No',
+        className: 'btn-danger'
+      }
+    },
+    callback: function (result) {
+      if(result){
+        $.post("../ajax/ficha_sanitaria_alimentacion.php?op=desactivar", {id_ficha : id}, function(e){
+          bootbox.alert(e);
+          table.ajax.reload();
+        });
+      }
+    }
+  });
+}
+
+//Función para activar registros
+function activar(id)
+{
+  
+  bootbox.confirm({
+    message: "Está seguro de activar el registro "+id+"?",
+    buttons: {
+      confirm: {
+        label: '<i class="fa fa-check"></i> Si',
+        className: 'btn-success'
+      },
+      cancel: {
+        label: '<i class="fa fa-times"></i> No',
+        className: 'btn-danger'
+      }
+    },
+    callback: function (result) {
+      if(result){
+        $.post("../ajax/ficha_sanitaria_alimentacion.php?op=activar", {id_ficha : id}, function(e){
+          bootbox.alert(e);
+          table.ajax.reload();
+        });
+      }
+    }
+  });
+}
+
+function open_local(id_empresa){
+	limpiar_local();
+	$('#id_empresa_local').val(id_empresa)
+	$('#modalLocal').modal('show')
+}
+
+//Función para activar local
+function activar_local(id_empresa,id_local)
+{
+	bootbox.confirm("¿Está Seguro de activar el registro?", function(result){
+		if(result)
+        {
+        	$.post("../ajax/local.php?op=activar", {id_local : id_local}, function(e){
+        		bootbox.alert(e);
+	            update_child(id_empresa);
+        	});
+        }
+	})
+}
+
+//Función para desactivar registros
+function desactivar_local(id_empresa,id_local)
+{
+	bootbox.confirm("¿Está Seguro de desactivar el registro?", function(result){
+		if(result)
+        {
+        	$.post("../ajax/local.php?op=desactivar", {id_local : id_local}, function(e){
+        		bootbox.alert(e);
+	            update_child(id_empresa);
+        	});
+        }
+	})
+}
+
+init();

@@ -1,0 +1,555 @@
+<?php
+//Activamos el almacenamiento en el buffer
+ob_start();
+session_start();
+ require 'header.php';
+ 
+?>
+<style type="text/css">
+  button, .buttons, .btn, .modal-footer .btn + .btn {
+    margin-bottom: 0px;
+    margin-right: 0px;
+
+  }
+  .btn-success {
+  background: #26B99A;
+  border: 1px solid #169F85;
+
+
+}
+.navbar-toggle {
+  width: 100%;
+  float: none;
+  margin-right: 0;
+}
+</style> 
+    <div class="right_col" role="main">        
+      <!-- Main content -->
+      <!--<section class="content">-->
+
+        <div class="row">
+          <div class="col-md-12 col-sm-12 col-xs-12">
+
+            <div class="x_panel">
+              
+              <div class="x_title">
+                <h2>Ficha para Evaluación Sanitaria de los Servicios de Alimentación <small></small></h2>
+                <ul class="nav navbar-right panel_toolbox">
+                  <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                  </li>
+                  <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="#">Settings 1</a>
+                      </li>
+                      <li><a href="#">Settings 2</a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li><a class="close-link"><i class="fa fa-close"></i></a>
+                  </li>
+                </ul>
+                <div class="clearfix"></div>
+              </div>
+
+
+              
+              <!-- /.box-header -->
+              <!-- centro -->
+              <div class="x_content" id="listadoregistros">
+                <table id="tbllistado" class="table table-striped table-bordered table-condensed table-hover " style="width: 100%">
+                  <thead>
+                    
+                    <tr class="v-grid-header">
+                    
+                    <th>Acciones</th>
+                    <th>Establecimiento</th>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Nombre Servicio</th>
+                    <th>Forma Servicio</th>
+                    <th>N° Manipuladores</th>
+                    <th>Creado por</th>
+                    <th>Fecha Creacion</th>
+                    
+                    </tr>  
+                  </thead>
+                  <tbody>                            
+                  </tbody>
+                  <tfoot>
+                    
+                    
+                    <th>Acciones</th>
+                    <th>Establecimiento</th>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Nombre Servicio</th>
+                    <th>Forma Servicio</th>
+                    <th>N° Manipuladores</th>
+                    <th>Creado por</th>
+                    <th>Fecha Creacion</th>
+                    
+                  </tfoot>
+                </table>
+              </div>
+
+              
+              <? require 'partials/modal_ficha_servicios_alimentacion.php'; ?>
+
+
+              <!-- Form Local-->
+              <div class="modal fade" id="modalLocal"  role="dialog"  aria-hidden="true" data-backdrop="static" tabindex="-1">
+                <div class="modal-dialog " role="document">
+
+                  <div class="modal-content">
+                  <!--<div class="panel panel-success">-->
+                    <div class="modal-header modal-header-success" >
+                      <button type="button" class="close" data-dismiss="modal">&times;</button>  
+                      <h4 class="panel-title" id="modalTitle">Nueva Area</h4>        
+                    </div>   
+
+                    <div class="modal-body">
+                      
+                      <div class="row">
+                        <div class="col-md-12">
+                          <div class="form-group">                            
+                            <label for="nombre_local" class="col-form-label">Nombre:</label>
+                            <input type="hidden" id="id_empresa_local">
+                            <input type="hidden" name="id_local" id="id_local">
+                            <input type="text" class="form-control text-uppercase" id="nombre_local" placeholder="Nombre"  maxlength="200" required autofocus>
+                          </div>
+                        </div>
+                      </div>
+
+
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="control-label">Direccion:</label>
+                             <input type="text" class="form-control input-sm text-uppercase" id="direccion_local" placeholder="Direccion"  maxlength="200" required autofocus>
+                          </div>
+                        </div>
+                      
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="control-label">Distrito:</label>
+                             <select class='form-control input-sm select2 itemNamedist text-uppercase' name='id_ubigeo_local' id='id_ubigeo_local' style="width: 100%;" >
+                          </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="control-label">Telefono Fijo:</label>
+                             <input type="text" class="form-control input-sm" id="telefono_fijo_local" placeholder="Telefono"  maxlength="20" required autofocus>
+                          </div>
+                        </div>
+                      
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="control-label">Celular:</label>
+                             <input type="text" class="form-control input-sm" id="celular_local" placeholder="Celular"  maxlength="20" required autofocus>
+                          </div>
+                        </div>
+                      </div>  
+
+
+
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" onclick="guardaryeditar_local();" class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-arrow-circle-left"></i> Cerrar</button>
+
+                    </div>
+                  <!--</div>-->
+                </div>
+
+                </div>
+              </div>
+
+
+<div data-toggle="modal" class="modal fade"  id="modalLocalidades"  role="dialog" aria-labelledby="modalLocalidades" aria-hidden="true" tabindex="-1" >
+        <div class="modal-dialog modal-md" role="document">
+          <div class="modal-content">
+            <div class="modal-header modal-header-success" >
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h4 class="panel-title" id="modalTitleLocalidad">Listado de Localidades</h4>
+            </div>
+
+            <div class="modal-body">
+
+              <div class="row">
+
+                <div class="col-md-12 col-sm-12 col-xs-12">
+
+
+                  <table id="tbllocalidades" class="table table-striped table-bordered dt-responsive table-hover " cellspacing="0" style="width: 100%">
+                    <thead class="v-grid-header"> 
+                               
+                      <th>Acciones</th>
+                      <th>Sector</th>
+                      <th>Localidad</th>                       
+                      <th>Viviendas</th>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                    <tfoot>
+                      
+                      <th>Acciones</th>
+                      <th>Sector</th>
+                      <th>Localidad</th>                       
+                      <th>Viviendas</th>
+                    </tfoot>
+                  </table>
+
+                </div>
+
+              </div>
+               
+
+            </div>
+            <div class="modal-footer">
+             <!--<button type="button" onclick="save();" class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>-->
+              <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-arrow-circle-left"></i> Cerrar</button>
+            </div>
+          </div>
+        </div>
+  </div>  
+
+
+<!-- Modal nueva Localidad--->
+  <div data-backdrop="static" class="modal fade" id="modalNewLocalidad"  role="dialog" aria-labelledby="modalNewLocalidad" aria-hidden="true" tabindex="-1">
+                <div class="modal-dialog modal-md" role="document">
+
+              <div class="modal-content">
+
+                  <!--<div class="panel panel-primary">-->
+                    <div class="modal-header modal-header-success" >
+                      <button type="button" class="close" data-dismiss="modal">&times;</button>  
+                      <h4 class="panel-title" id="modalTitleLoc">Nueva Localidad</h4> 
+                      <input type="hidden" id="id_localidad" value="0" >  
+                    </div>      
+
+                    <div class="modal-body">
+                          <div class="row">
+                            <div class="col-md-3">
+                              <div class="form-group">
+                                <label for="exampleInputPassword1">Sector</label>
+                                <select class='form-control'  id='sector'  >
+                                </select>
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <div class="form-group">
+                                  <label for="nombre_localidad">Localidad</label>
+                                    <input type="text" class="form-control" id="nombre_localidad" placeholder="Localidad">
+                              </div>
+                            </div>  
+                            <div class="col-md-3">
+                              <div class="form-group">
+                                  <label for="nombre_localidad">Viviendas</label>
+                                    <input type="number" value="0" class="form-control" id="cnt_viviendas" >
+                              </div>
+                            </div>  
+                          </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" onclick="saveLocalidad();" class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa fa-arrow-circle-left"></i> Cancelar</button>
+
+                    </div>
+
+                  </div>
+              </div>
+</div>
+
+
+
+
+
+              <!--Fin centro -->
+            </div><!-- /.box -->
+          </div><!-- /.col -->
+        </div><!-- /.row -->
+      
+      <!--</section>--><!-- /.content -->
+
+    </div><!-- /.content-wrapper -->
+
+
+
+
+
+
+
+
+
+
+    <!--Fin-Contenido-->
+    <?php
+   require 'footer.php';
+  ?>
+
+
+
+  <script type="text/javascript" src="scripts/ficha_servicios_alimentacion.js?rnd=<?php echo rand(); ?>"></script>
+
+  <script>
+var tblReq;
+
+function sum_valores(){
+    tot_i=0;tot_ii=0;tot_iii=0;tot_iv=0;
+    for (i=1;i<=5;i++){   
+      nval=$("#i_"+i.toString()).val();
+      tot_i+=parseInt(nval);
+      $("#subtotal_i").val(tot_i);
+    }
+
+    for (i=1;i<=5;i++){   
+      nval=$("#ii_"+i.toString()).val();
+      tot_ii+=parseInt(nval);
+      $("#subtotal_ii").val(tot_ii);
+    }
+
+   
+    for (i=1;i<=26;i++){   
+      nval=$("#iii_"+i.toString()).val();
+      tot_iii+=parseInt(nval);
+      $("#subtotal_iii").val(tot_iii);
+    }
+
+     for (i=1;i<=7;i++){   
+      nval=$("#iv_"+i.toString()).val();
+      tot_iv+=parseInt(nval);
+      $("#subtotal_iv").val(tot_iv);
+    }
+
+
+
+    $("#total_puntaje").val(tot_i+tot_ii+tot_iii+tot_iv);
+}
+
+function ver(){
+
+   limpiar();
+
+   $("#hid_local").val($("#s_id_local").val());  
+   $("#establecimiento").val($("#s_local").val())
+   //$("#distrito").val($("#s_distrito").val())
+
+   $("#fecha_encuesta").val($("#s_hoy").val())
+
+  $('#modalNew').modal('show')
+      //$("#nombre").focus();
+}
+
+    $(function () {
+
+
+      $('.text-right').keypress(function (e) {
+
+          var key = window.Event ? e.which : e.keyCode
+
+          return (key >= 48 && key <= 57)
+
+      });
+
+       $('.text-right').keyup(function (e) {
+          sum_valores();
+      });
+
+
+    $(".select2").select2();
+
+     $.getJSON('../ajax/tabla.php?op=list&id_tabla=17', function(data) {
+      var template = $('#tpl_sector').html();
+      var html = Mustache.to_html(template, data);
+      $('#sector').html(html);
+    });
+
+      $.getJSON('../ajax/tabla.php?op=list&id_tabla=1', function(data) {
+      var template = $('#tpl_tipo_doc').html();
+      var html = Mustache.to_html(template, data);
+      $('#tipo_doc').html(html);
+    });
+
+      $.getJSON('../ajax/tabla.php?op=list&id_tabla=40', function(data) {
+        var template = $('#tpl_especies').html();
+        var html = Mustache.to_html(template, data);
+        $('#id_especie').html(html);
+        $('#id_especie').selectpicker();
+      });
+
+
+    $('#id_ubigeo').select2({
+      //dropdownParent: $("#modalLocal"),
+      placeholder: "Seleccione",
+      language: {
+        inputTooShort: function () {
+          return 'digita nombre del Distrito.';
+        }
+      },
+      ajax: {
+        type: "GET",
+        url: "../ajax/ubigeo.php",
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return {
+          q: params.term, // search term
+          page: params.page,
+          op : 'listarUbigeo'
+        };
+      },
+      results: function (data, page) { // parse the results into the format expected by 
+        return { results: data };
+      },
+      processResults: function (data, params) {
+       
+        for (var i = 0; i < data.length; i++) {
+          data[i].id = data[i].id;
+        }
+        return {
+          results: data
+        };
+      },
+      cache: true
+    },
+    escapeMarkup: function (markup) {
+      return markup;
+    }, // let our custom formatter work
+    minimumInputLength: 2,
+   
+  });
+
+
+     $('#fecha_encuesta').daterangepicker({
+       locale: {
+            format: 'DD/MM/YYYY'
+        },
+        autoclose: true,
+        singleDatePicker: true,
+        singleClasses: "picker_2"
+      });
+
+
+    $('#id_medico_jefe').select2({
+      //dropdownParent: $("#modalNew"),
+      placeholder: "Seleccione",
+      language: {
+        inputTooShort: function () {
+          return 'digite apellidos y nombres.';
+        }
+      },
+      ajax: {
+        type: "GET",
+        url: "../ajax/personal.php",
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return {
+          q: params.term, // search term
+          page: params.page,
+          op : 'select'
+        };
+      },
+      results: function (data, page) { // parse the results into the format expected by Select2.
+
+        return { results: data };
+      },
+      processResults: function (data, params) {
+
+        for (var i = 0; i < data.length; i++) {
+          data[i].id = data[i].id;
+        }
+        return {
+          results: data
+        };
+      },
+      cache: true
+    },
+    escapeMarkup: function (markup) {
+      return markup;
+    }, // let our custom formatter work
+    minimumInputLength: 2,
+
+  });
+
+
+     $('#ubigeo_persona').select2({
+      dropdownParent: $("#modalNew"),
+      placeholder: "Seleccione",
+      language: {
+        inputTooShort: function () {
+          return 'digita nombre del Distrito.';
+        }
+      },
+      ajax: {
+        type: "GET",
+        url: "../ajax/ubigeo.php",
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return {
+          q: params.term, // search term
+          page: params.page,
+          op : 'listar'
+        };
+      },
+      results: function (data, page) { // parse the results into the format expected by Select2.
+        
+        return { results: data };
+      },
+      processResults: function (data, params) {
+       
+        for (var i = 0; i < data.length; i++) {
+          data[i].id = data[i].id;
+        }
+        return {
+          results: data
+        };
+      },
+      cache: true
+    },
+    escapeMarkup: function (markup) {
+      return markup;
+    }, // let our custom formatter work
+    minimumInputLength: 2,
+    
+  });
+
+
+
+
+    $('#modalNew').on('shown.bs.modal', function () {
+       $('#nombre').focus();
+    })
+
+    /*$("#ubigeo").select2({
+      dropdownParent: $('#modalNew .modal-body')
+    });*/
+});
+
+
+
+ 
+  </script>
+<script id="tpl_sector" type="text/template"><option value='' selected>--Seleccione Sector--</option>
+  {{#tablas}}<option value='{{id}}'>{{nombre}}</option>{{/tablas}}
+</script>
+
+<script id="tpl_tipo_doc" type="text/template"><option value='' selected>--Seleccione--</option>
+  {{#tablas}}<option value='{{id}}'>{{nombre}}</option>{{/tablas}}
+</script>
+
+<script id="tpl_especies" type="text/template">
+  {{#tablas}}<option value='{{id}}'>{{nombre}}</option>{{/tablas}}
+</script>
+
+  <?php 
+ob_end_flush();
+?>
+
+

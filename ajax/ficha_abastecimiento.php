@@ -1,0 +1,592 @@
+<?php
+ob_start();
+/*if (strlen(session_id()) < 1){
+	session_start();//Validamos si existe o no la sesión
+}
+if (!isset($_SESSION["nombre"]))
+{
+  header("Location: ../vistas/login.html");//Validamos el acceso solo a los usuarios logueados al sistema.
+}
+else
+{
+//Validamos el acceso solo al usuario logueado y autorizado.
+if ($_SESSION['almacen']==0)
+{
+	*/
+require_once "../modelos/FichaAbastecimiento.php";
+
+function to_pg_array($set)
+{
+	settype($set, 'array'); // can be called with a scalar or array
+	$result = array();
+	foreach ($set as $t) {
+		if (is_array($t)) {
+			$result[] = to_pg_array($t);
+		} else {
+			$t = str_replace('"', '\\"', $t); // escape double quote
+			if (!is_numeric($t)) // quote only non-numeric values
+				$t = '"' . $t . '"';
+			$result[] = $t;
+		}
+	}
+	return '{' . implode(",", $result) . '}'; // format
+}
+
+$ficha = new Ficha();
+
+$aDet = array();
+if (isset($_POST['id_especies'])) {
+	$aesp = explode(",", $_POST['id_especies']);
+	for ($i = 0; $i < count($aesp); $i++) {
+		$aDet[$i] = array($aesp[$i]);
+	}
+}
+
+$idempresa = isset($_POST["id_empresa"]) ? limpiarCadena($_POST["id_empresa"]) : "";
+$nombre = isset($_POST["nombre"]) ? limpiarCadena($_POST["nombre"]) : "";
+$direccion = isset($_POST["direccion"]) ? limpiarCadena($_POST["direccion"]) : "";
+$ruc = isset($_POST["ruc"]) ? limpiarCadena($_POST["ruc"]) : "";
+$nombre_localidad = isset($_POST["nombre"]) ? limpiarCadena($_POST["nombre"]) : "";
+
+switch ($_GET["op"]) {
+
+	case 'reportEValuacionSistemasAgua':
+
+		$rs=$ficha->reportLimpiezaCisterna($_POST['anio']);
+		$datlim=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$datlim[]=$reg;
+ 		}
+
+ 		$rs=$ficha->reportAntiguedadCisterna($_POST['anio']);
+		$datant=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$datant[]=$reg;
+ 		}
+
+ 		$rs=$ficha->reportLecturaCloro($_POST['anio']);
+		$datlec=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$datlec[]=$reg;
+ 		}
+
+ 		$rs=$ficha->reportExaBac($_POST['anio']);
+		$datbac=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$datbac[]=$reg;
+ 		}
+
+ 		$rs=$ficha->reportTanques($_POST['anio']);
+		$dattan=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$dattan[]=$reg;
+ 		}
+
+ 		$rs=$ficha->reportFuncionamientoTanques($_POST['anio']);
+		$datfun=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$datfun[]=$reg;
+ 		}
+
+
+ 		$datreport=array('array_lim'=>$datlim,'array_ant'=>$datant,'array_lec'=>$datlec,'array_bac'=>$datbac,'array_tan'=>$dattan,'array_fun'=>$datfun );
+
+
+		echo json_encode($datreport);		
+	break;
+
+
+	case 'reportLimpiezaCisterna':
+		$rs=$ficha->reportLimpiezaCisterna($_POST['anio']);
+				
+		$data=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$data[]=$reg;
+ 		}
+		echo json_encode($data);		
+	break;
+
+	case 'reportAntiguedadCisterna':
+		$rs=$ficha->reportAntiguedadCisterna($_POST['anio']);
+				
+		$data=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$data[]=$reg;
+ 		}
+		echo json_encode($data);		
+	break;
+
+	case 'reportLecturaCloro':
+		$rs=$ficha->reportLecturaCloro($_POST['anio']);
+				
+		$data=array();
+		while ($reg=pg_fetch_object($rs)){
+ 			$data[]=$reg;
+ 		}
+		echo json_encode($data);		
+	break;
+
+
+	case 'save':
+		$rs = $ficha->save(
+			$_POST['id_ficha'],
+			$_POST['id_local'],
+			$_POST['fecha_registro'],
+			limpiarCadena($_POST['numero_suministro']),
+			$_POST['id_tipo_sistema'],
+			$_POST['numero_bombas'],
+			$_POST['potencia_bomba'],
+			$_POST['numero_tanques_elevados'],
+			$_POST['funciona_sistema_abastecimiento'],
+			$_POST['numero_sistemas_con_grifo'],
+			limpiarCadena($_POST['antiguedad_instalacion']),
+			limpiarCadena($_POST['conservacion_tuberias_tanque']),
+			limpiarCadena($_POST['conservacion_hidro_llave']),
+			limpiarCadena($_POST['horario_abastecimiento']),
+			$_POST['numero_grifos_agua'],
+			$_POST['cuenta_tanque_anexo'],
+			$_POST['capacidad_tanque_elevado'],
+			$_POST['capacidad_cisterna'],
+			$_POST['volumen_agua_promedio_anual'],
+			$_POST['distancia_cisterna_punto'],
+			$_POST['animales_cinco_metros'],
+			$_POST['tiene_cerco_perimetral_tanque'],
+			$_POST['posible_ingreso_ajenos'],
+			$_POST['material_tapa_adecuado'],
+			$_POST['tapa_tanque_buen_estado'],
+			$_POST['tanque_presenta_fisuras'],
+			$_POST['paredes_interiores_limpias'],
+			$_POST['natas_flotantes_tanque'],
+			$_POST['posible_ingreso_lluvia'],
+			$_POST['residuos_solidos_cercanos'],
+			$_POST['tiene_cerco_perimetral_cisterna'],
+			$_POST['boca_cisterna_raz_piso'],
+			$_POST['inservibles_cercanos'],
+			$_POST['fecha_muestreo'],
+			$_POST['hora_muestreo'],
+			$_POST['punto_muestreo'],
+			$_POST['cloro_residual'],
+			$_POST['ph'],
+			$_POST['frecuencia_medicion_cloro'],
+			$_POST['toma_muestra_am'],
+			$_POST['fecha_ultima_limpieza'],
+			limpiarCadena($_POST['empresa_realizo_servicio']),
+			$_POST['id_usuario']
+		);
+
+		$rpta = pg_fetch_array($rs);
+		echo $rpta[0];
+		break;
+	case 'deleteLocalidad':
+		$rspta = $empresa->deleteLocalidad($_POST["id_localidad"]);
+		echo $rspta ? "Registro eliminado" : "Registro no se puede eliminar";
+		break;
+	case 'mostrarLocalidad':
+		$f = $empresa->mostrarLocalidad($_POST["id_localidad"]);
+		$data = array(
+			'descripcion' => $f->descripcion,
+			'cnt_viviendas' => $f->cnt_viviendas,
+			'sector' => $f->sector
+		);
+		echo json_encode($data);
+		break;
+	case 'saveLocalidad':
+		$rs = $empresa->saveLocalidad(
+			$_POST['id_localidad'],
+			$_POST['id_local'],
+			$_POST['sector'],
+			$nombre_localidad,
+			$_POST['cnt_viviendas'],
+			$_POST['id_usuario']
+		);
+		$rpta = pg_fetch_array($rs);
+		echo $rpta[0];
+		break;
+	case 'listarLocalidades':
+		$aColumns = array('l.id', 'sec.descripcion', 'l.descripcion', "l.cnt_viviendas");
+		/* Indexed column (used for fast and accurate table cardinality) */
+		$sIndexColumn = "l.id";
+		$sOrder = "";
+
+		/*  Paging */
+
+		$sLimit = "";
+		if (isset($_GET['iDisplayStart']) && $_GET['iDisplayLength'] != '-1') {
+			$sLimit = "LIMIT " . intval($_GET['iDisplayLength']) . " OFFSET " .
+				intval($_GET['iDisplayStart']);
+		}
+
+		/*    * Ordering     */
+		if (isset($_GET['iSortCol_0'])) {
+			$sOrder = "ORDER BY  ";
+			for ($i = 0; $i < intval($_GET['iSortingCols']); $i++) {
+				if ($_GET['bSortable_' . intval($_GET['iSortCol_' . $i])] == "true") {
+					$sOrder .= $aColumns[intval($_GET['iSortCol_' . $i])] . "
+				" . ($_GET['sSortDir_' . $i] === 'asc' ? 'asc' : 'desc') . ", ";
+				}
+			}
+
+			$sOrder = substr_replace($sOrder, "", -2);
+			if ($sOrder == "ORDER BY") {
+				$sOrder = "";
+			}
+		}
+
+		/*
+	     * Filtering
+	     * NOTE This assumes that the field that is being searched on is a string typed field (ie. one
+	     * on which ILIKE can be used). Boolean fields etc will need a modification here.
+	     */
+		$sWhere = "WHERE l.id_local='" . $_GET['id_establecimiento'] . "' ";
+		//$_GET['sSearch'] != ""
+		if (isset($_GET['sSearch']) && $_GET['sSearch'] != "") {
+			$sWhere = "AND  (";
+			for ($i = 0; $i < count($aColumns); $i++) {
+				if (isset($_GET['bSearchable_' . $i]) &&  $_GET['bSearchable_' . $i] == "true") {
+					$sWhere .= $aColumns[$i] . " LIKE '%" . mb_strtoupper(pg_escape_string($_GET['sSearch']), 'UTF-8') . "%' OR ";
+				}
+			}
+			$sWhere = substr_replace($sWhere, "", -3);
+			$sWhere .= ")";
+		}
+
+
+		/* Individual column filtering */
+		for ($i = 0; $i < count($aColumns); $i++) {
+			if (isset($_GET['bSearchable_' . $i]) && $_GET['bSearchable_' . $i] == "true" && $_GET['sSearch_' . $i] != '') {
+
+				if ($aColumns[$i] == 'i.numero') {
+					$sWhere .= "AND " . $aColumns[$i] . "='" . mb_strtoupper(pg_escape_string($_GET['sSearch_' . $i]), 'UTF-8') . "' ";
+				} else {
+					$sWhere .= " AND " . $aColumns[$i] . " LIKE '%" . mb_strtoupper(pg_escape_string($_GET['sSearch_' . $i]), 'UTF-8') . "%' ";
+				}
+			}
+		}
+
+
+
+
+		$rspta = $empresa->listarLocalidades($sWhere, $sOrder, $sLimit);
+
+
+		$a = $empresa->contarLocalidades($sWhere);
+		$cnt = $a->cnt;
+
+		//Vamos a declarar un array
+		$data = array();
+
+
+		$stat = "";
+		$btns = "";
+
+		while ($reg = pg_fetch_object($rspta)) {
+
+			/*$fa=$reg->{'i.fecha_autorizacion'};
+	    		$ids=$reg->{'id_salida'};
+
+	    		if ($fa!='' && $ids==''){
+	    			$btns="<button type='button' class='btn btn-success btn-sm' onclick='seleccionar_req(".$reg->{'i.id'}.")'>Seleccionar</button>";
+	    		}else{
+	    			$btns="";
+	    		}*/
+
+			/*if ($ids!=""){
+	    			$stat="<i class='fa fa-check text-success'></i>";
+	    		}else{
+	    			$stat="";
+	    		}*/
+			$btns = '<button class="btn btn-link btn-xs " onclick="show_localidad(' . $reg->{'l.id'} . ')"><i  class="fa fa-pencil text-success"></i></button><button class="btn btn-link btn-xs" onclick="delete_localidad(' . $reg->{'l.id'} . ')"><i class="fa fa-trash text-danger"></i></button>';
+			$data[] = array(
+
+				//,
+
+				"0" => $btns,
+				"1" => $reg->{'sec.descripcion'},
+				"2" => $reg->{'l.descripcion'},
+				"3" => $reg->{'l.cnt_viviendas'},
+				"4" => $reg->{'l.id'}
+
+
+			);
+		}
+		$results = array(
+			//"sEcho"=>1, //Información para el datatables
+			"iTotalRecords" => $cnt, //enviamos el total registros al datatable
+			"iTotalDisplayRecords" => $cnt, //enviamos el total registros a visualizar
+			"aaData" => $data
+		);
+		echo json_encode($results);
+		break;
+	case 'tableLocales':
+		$rs = $empresa->selectLocales($_GET['id_empresa']);
+		$data = array();
+
+?>
+		<div id="div_detalleLocal">
+			<div class="row">
+				<div class="col-md-11">
+
+					<table id="dt<?= $_GET['id_empresa']; ?>" class="table  table-striped table-bordered table-hover table-responsive" style="width: 100%">
+						<thead class="bg-green">
+							<tr class="modal-header-success">
+								<!--<th ></th>-->
+								<th>Accion</th>
+								<th>Nombre</th>
+								<th>Direccion</th>
+								<th>Distrito</th>
+								<th>Telefono</th>
+								<th>Celular</th>
+								<th>Estado</th>
+							</tr>
+						</thead>
+						<tbody>
+							<? while ($reg = pg_fetch_object($rs)) {
+
+								$btn = ($reg->estado == '1') ? '<button class="btn btn-link btn-xs" onclick="show_localidades(' . $reg->id . ')"><i class="fa fa-institution text-success"></i></button>
+ 				<button class="btn btn-link btn-xs" onclick="mostrar_local(' . $_GET['id_empresa'] . ',' . $reg->id . ')"><i class="fa fa-pencil"></i></button>' .
+									' <button class="btn btn-link btn-xs" onclick="desactivar_local(' . $_GET['id_empresa'] . ',' . $reg->id . ')"><i class="fa fa-close"></i></button>' :
+									'<button class="btn btn-link btn-xs" onclick="mostrar_local(' . $_GET['id_empresa'] . ',' . $reg->id . ')"><i class="fa fa-pencil"></i></button>' .
+									' <button class="btn btn-link btn-xs" onclick="activar_local(' . $_GET['id_empresa'] . ',' . $reg->id . ')"><i class="fa fa-check"></i></button>';
+								$stat = ($reg->estado == '1') ? '<span class="label bg-green">Activado</span>' :
+									'<span class="label bg-red">Desactivado</span>';
+								$btntoogle = '<button class="btn btn-link btn-xs" data-toggle="collapse" data-target="#colla' . $reg->id . '" onclick=""><i class="fa fa-plus"></i></button>';
+								$btntoogle = '';
+
+								echo "<tr>";
+								//echo "<td scope='row'>".$btntoogle."</td>";
+								echo "<td scope='row'>" . $btn . "</td>";
+								echo "<td scope='row'>" . $reg->nombre . "</td>";
+								echo "<td scope='row'>" . $reg->direccion . "</td>";
+								echo "<td scope='row'>" . $reg->distrito . "</td>";
+								echo "<td scope='row'>" . $reg->telefono_fijo . "</td>";
+								echo "<td scope='row'>" . $reg->celular . "</td>";
+								echo "<td scope='row'>" . $stat . "</td>";
+								echo "</tr>";
+								//echo "<tr class='collapse' id='colla".$reg->id."' ><td scope='row' colspan='8'>Localidades</td></tr>";
+
+							}
+							?>
+						</tbody>
+						<tfoot>
+							<th colspan="7"><button type="button" class="btn btn-success" onclick="open_local('<?= $_GET['id_empresa']; ?>');">Nuevo</button></th>
+
+
+						</tfoot>
+
+
+
+
+					</table>
+				</div>
+			</div>
+		</div>
+<?
+
+		break;
+	case 'listLocales':
+		$rs = $empresa->selectLocales($_GET['id_empresa']);
+		$data = array();
+		$pselect = (isset($_GET['id_selected'])) ? $_GET['id_selected'] : '';
+		while ($reg = pg_fetch_object($rs)) {
+			$sel = ($reg->id == $pselect) ? ' selected ' : '';
+			$data[] = array("id" => $reg->id, "nombre" => $reg->nombre, "selected" => $sel);
+		}
+		$results = array('locales' => $data);
+		echo json_encode($results);
+		break;
+	case 'list':
+
+		$rs = $empresa->select();
+
+		$data = array();
+		while ($reg = pg_fetch_object($rs)) {
+			$data[] = array("id" => $reg->id, "nombre" => $reg->nombre);
+		}
+		$results = array('empresas' => $data);
+		echo json_encode($results);
+		break;
+	case 'guardaryeditar':
+		if (empty($idempresa)) {
+
+			$rspta = $empresa->insertar($nombre, $direccion, $_POST['ubigeo'], $ruc, $_POST['telefono_fijo']);
+
+			echo $rspta ? "Empresa registrada" : "Empresa no se pudo registrar";
+		} else {
+			$rspta = $empresa->editar($idempresa, $nombre, $direccion, $_POST['ubigeo'], $ruc, $_POST['telefono_fijo']);
+			echo $rspta ? "Registro actualizado" : "Registro no se pudo actualizar";
+		}
+		break;
+
+	case 'desactivar':
+		$rspta = $ficha->desactivar($_POST['id']);
+		echo $rspta ? "Registro desactivado" : "Registro no se puede desactivar";
+		break;
+
+	case 'activar':
+		$rspta = $ficha->activar($_POST['id']);
+		echo $rspta ? "Registro activo" : "Registro no se puede activar";
+		break;
+
+	case 'mostrar':
+		$f = $ficha->mostrar($_POST["id"]);
+		//$rs=$ficha->detalleFicha($_POST["id_ficha"]);
+
+
+		$data = pg_fetch_all($f);
+
+
+		/*$data=array(
+			'id'=>$f->id,
+			'id_local'=>$f->id_local,
+			'fecha_inicio'=>$f->fecha_inicio,
+			'fecha_termino'=>$f->fecha_termino,
+			'id_tipo_actividad'=>$f->id_tipo_actividad,
+			'tipo_actividad'=>$f->tipo_actividad,
+			'sector'=>$f->sector,
+			'id_localidad'=>$f->id_localidad,
+			'localidad'=>$f->localidad,
+			'establecimiento'=>$f->establecimiento,
+			'distrito'=>$f->distrito
+			
+		);*/
+		echo json_encode($data);
+
+		break;
+
+	case 'listar':
+
+		$aColumns = array(
+			'f.id', 'l.nombre', 'f.id', 'f.fecha_registro', 'u.distrito', 'l.ris',
+			'l.celular', 'uc.login', 'f.fecha_creacion'
+		);
+		/* Indexed column (used for fast and accurate table cardinality) */
+		$sIndexColumn = "f.id";
+		$sOrder = "";
+
+		/*  Paging */
+
+		$sLimit = "";
+		if (isset($_GET['iDisplayStart']) && $_GET['iDisplayLength'] != '-1') {
+			$sLimit = "LIMIT " . intval($_GET['iDisplayLength']) . " OFFSET " .
+				intval($_GET['iDisplayStart']);
+		}
+
+		/*    * Ordering     */
+		if (isset($_GET['iSortCol_0'])) {
+			$sOrder = "ORDER BY  ";
+			for ($i = 0; $i < intval($_GET['iSortingCols']); $i++) {
+				if ($_GET['bSortable_' . intval($_GET['iSortCol_' . $i])] == "true") {
+					$sOrder .= $aColumns[intval($_GET['iSortCol_' . $i])] . "
+    				" . ($_GET['sSortDir_' . $i] === 'asc' ? 'asc' : 'desc') . ", ";
+				}
+			}
+
+			$sOrder = substr_replace($sOrder, "", -2);
+			if ($sOrder == "ORDER BY") {
+				$sOrder = "";
+			}
+		}
+
+		/*
+	     * Filtering
+	     * NOTE This assumes that the field that is being searched on is a string typed field (ie. one
+	     * on which ILIKE can be used). Boolean fields etc will need a modification here.
+	     */
+		$sWhere = "";
+
+
+
+		//$_GET['sSearch'] != ""
+		if (isset($_GET['sSearch']) && $_GET['sSearch'] != "") {
+			$sWhere = "WHERE (";
+			for ($i = 0; $i < count($aColumns); $i++) {
+				if ($_GET['bSearchable_' . $i] == "true") {
+					$sWhere .= $aColumns[$i] . " LIKE '%" . mb_strtoupper(pg_escape_string($_GET['sSearch']), 'UTF-8') . "%' OR ";
+				}
+			}
+			$sWhere = substr_replace($sWhere, "", -3);
+			$sWhere .= ")";
+		}
+
+
+		if ($sWhere == '') {
+			$sWhere = " WHERE f.id<>0 ";
+		} else {
+			$sWhere .= " AND f.id<>0 ";
+		}
+
+		/*Filtrando por establecimiento segun tipo de usuario*/
+		if ($_GET['id_nivel'] == '2') { //Solo filtrar para tipo usuario simple
+			$sWhere .= " AND f.id_local='" . $_GET['id_local'] . "' ";
+		}
+
+
+
+		/* Individual column filtering */
+		for ($i = 0; $i < count($aColumns); $i++) {
+			if (isset($_GET['bSearchable_' . $i]) && $_GET['bSearchable_' . $i] == "true" && $_GET['sSearch_' . $i] != '') {
+				if ($sWhere == "") {
+					$sWhere = "WHERE ";
+				} else {
+					$sWhere .= " AND ";
+				}
+				$sWhere .= $aColumns[$i] . " LIKE '%" . mb_strtoupper(pg_escape_string($_GET['sSearch_' . $i]), 'UTF-8') . "%' ";
+			}
+		}
+
+
+
+
+		$rspta = $ficha->listar($sWhere, $sOrder, $sLimit);
+
+		$a = $ficha->contar($sWhere);
+		$cnt = $a->cnt;
+
+		//Vamos a declarar un array
+		$data = array();
+
+		while ($reg = pg_fetch_object($rspta)) {
+			$btnEdit = '';
+			$btnActDes = '';
+			if ($reg->{'f.id_usuario_crea'} == $_GET['id_usuario']) {
+				if ($reg->{'f.estado'} == 't') {
+					$btnEdit = "<a href='#' onclick='open_ficha(" . $reg->{'f.id'} . ")'><i class='fa fa-pencil text-success'></i></a>&nbsp;";
+				}
+				$btnActDes = ($reg->{'f.estado'} == 't') ? "<button class='btn btn-link btn-xs ' onclick='desactivar(" . $reg->{'f.id'} . ")'>
+ 				<i class='fa fa-close text-danger'></i></button>" : "<button class='btn btn-link btn-xs' onclick='activar(" . $reg->{'f.id'} . ")'>
+ 				<i class='fa fa-check'></i></button>";
+			}
+			$btnPrint = "<a href='#' onclick='print_compra(" . $reg->{'f.id'} . ")'><i class='fa fa-print text-warning'></i></a>";
+			$data[] = array(
+
+				"0" => $btnEdit . $btnActDes . $btnPrint,
+				"1" => $reg->{'l.nombre'},
+				"2" => $reg->{'f.id'},
+				"3" => $reg->{'f.fecha_registro'},
+				"4" => $reg->{'u.distrito'},
+				"5" => $reg->{'l.ris'},
+				"6" => $reg->{'l.celular'},
+				"7" => $reg->{'uc.login'},
+				"8" => $reg->{'f.fecha_creacion'},
+				"9" => $reg->{'f.estado'}
+			);
+		}
+		$results = array(
+			//"sEcho"=>1, //Información para el datatables
+			"iTotalRecords" => $cnt, //enviamos el total registros al datatable
+			"iTotalDisplayRecords" => $cnt, //enviamos el total registros a visualizar
+			"aaData" => $data
+		);
+		echo json_encode($results);
+
+		break;
+}
+//Fin de las validaciones de acceso
+/*}
+else
+{
+  require 'noacceso.php';
+}
+}*/
+ob_end_flush();
+?>
