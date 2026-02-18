@@ -1,3 +1,16 @@
+// AL INICIO DEL ARCHIVO (antes del HTML):
+<?php
+session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+// Generar CAPTCHA matemático
+if (!isset($_SESSION['captcha_num1']) || !isset($_SESSION['captcha_num2'])) {
+    $_SESSION['captcha_num1'] = rand(1, 10);
+    $_SESSION['captcha_num2'] = rand(1, 10);
+}
+?>
+
 <?php
 require_once "../modelos/Empresa.php";
 $empresa=new Empresa();
@@ -93,7 +106,8 @@ $empresa=new Empresa();
 
           <div class="input-group">           
               <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
-              <input type="text" id="logina" name="logina" class="form-control" placeholder="Usuario" onblur="getdataEmpresa();">            
+              <input type="text" id="logina" name="logina" class="form-control" placeholder="Usuario" onblur="getdataEmpresa();">
+              <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">            
           </div>
 
           <div class="input-group">
@@ -123,6 +137,23 @@ $empresa=new Empresa();
               <span class="input-group-addon"><i class="fa fa-key fa" aria-hidden="true"></i></span>
               <input type="password" id="clavea" name="clavea" class="form-control" placeholder="Password">
            
+          </div>
+          
+          <!-- Campo de CAPTCHA -->
+          <div class="input-group">
+              <span class="input-group-addon">
+                  <i class="fa fa-calculator" aria-hidden="true"></i>
+              </span>
+              <input type="text" readonly class="form-control" style="background: #f5f5f5; font-weight: bold;" 
+                    value="¿Cuánto es <?php echo $_SESSION['captcha_num1']; ?> + <?php echo $_SESSION['captcha_num2']; ?>?" />
+          </div>
+
+          <div class="input-group">
+              <span class="input-group-addon">
+                  <i class="fa fa-calculator" aria-hidden="true"></i>
+              </span>
+              <input type="number" id="captcha" name="captcha" class="form-control" 
+                    placeholder="Resultado" required>
           </div>
 
           <div class="row">

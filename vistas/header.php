@@ -169,12 +169,14 @@ while ($reg=pg_fetch_object($rs)){
 
               <div class="profile_info">
                 <span>Bienvenido,</span>
-                <h2><?=$_SESSION['s_login'];?></h2>
+                <!-- <h2><?=$_SESSION['s_login'];?></h2> -->
+                <h2><?=htmlspecialchars($_SESSION['s_login'] ?? '', ENT_QUOTES, 'UTF-8');?></h2>
                 <input type="hidden" id="s_id_local" value="<?=$_SESSION['s_id_local'];?>">
                 <input type="hidden" id="s_local" value="<?=$_SESSION['s_local'];?>">
                 <input type="hidden" id="s_id_usuario" value="<?=$_SESSION['s_id_usuario'];?>">
 
-                <input type="hidden" id="s_login" value="<?=$_SESSION['s_login'];?>">
+                <!-- <input type="hidden" id="s_login" value="<?=$_SESSION['s_login'];?>"> -->
+                <input type="hidden" id="s_login" value="<?=htmlspecialchars($_SESSION['s_login'] ?? '', ENT_QUOTES, 'UTF-8');?>">
 
 
 
@@ -273,8 +275,8 @@ while ($reg=pg_fetch_object($rs)){
 
               <ul class="nav navbar-nav navbar-right">
                 <li class="nav-item dropdown" style="padding-left: 15px;">
-                  <a href="javascript:;" class="user-profile dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false"><?=$_SESSION['s_login'];?></a>
-
+                  <!-- <a href="javascript:;" class="user-profile dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false"><?=$_SESSION['s_login'];?></a> -->
+                  <a href="javascript:;" class="user-profile dropdown-toggle" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false"><?=htmlspecialchars($_SESSION['s_login'] ?? '', ENT_QUOTES, 'UTF-8');?></a>
                   <ul class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
                     <!--<li><a href="javascript:;"> Perfil</a></li>
                     <li>
