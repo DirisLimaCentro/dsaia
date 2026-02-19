@@ -36,16 +36,9 @@ $empresa=new Empresa();
 
 
 
-    <link href="../public/build/css/custom.css" rel="stylesheet">
-
-    <!-- Theme style -->
-    <!--<link rel="stylesheet" href="../public/css/AdminLTE.min.css">-->
-    <!-- iCheck -->
-    <!--<link rel="stylesheet" href="../public/css/blue.css">-->
+    <link href="../public/build/css/custom.css?v=<?php echo filemtime('../public/build/css/custom.css'); ?>" rel="stylesheet">
     <!-- toastr -->
     <link rel="stylesheet" href="../public/toastr/toastr.min.css">
-
-    <link href="../public/build/css/custom.css" rel="stylesheet">
     <link rel="stylesheet" href="../public/spinkit/spinkit.css">
     <link rel="stylesheet" href="../public/app/css/app.css">
 
@@ -86,7 +79,7 @@ $empresa=new Empresa();
         
 
 
-     <div id="loginbox" style="margin-top:250px;" class="mainbox">
+     <div id="loginbox" class="mainbox login-box">
       <div class="panel panel-primary" >
      <!-- <div class="animate form login_form">-->
         

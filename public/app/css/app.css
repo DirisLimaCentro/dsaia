@@ -67,28 +67,17 @@
     color:#fff;
     padding:9px 15px;
     border-bottom:1px solid #eee;
-    /*background-color: #26B99A;*/
-
     background: linear-gradient(45deg, #43A047 0%, #a6daa8 100%);
-
-    -webkit-border-top-left-radius: 5px;
-    -webkit-border-top-right-radius: 5px;
-    -moz-border-radius-topleft: 5px;
-    -moz-border-radius-topright: 5px;
-     border-top-left-radius: 3px;
-     border-top-right-radius: 3px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 .modal-header-warning {
     color:#fff;
     padding:9px 15px;
     border-bottom:1px solid #ff6f00;
     background: linear-gradient(45deg, #ff6f00 0%, #ffca28 100%);
-    -webkit-border-top-left-radius: 5px;
-    -webkit-border-top-right-radius: 5px;
-    -moz-border-radius-topleft: 5px;
-    -moz-border-radius-topright: 5px;
-     border-top-left-radius: 3px;
-     border-top-right-radius: 3px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 
 .panel-warning {
@@ -99,13 +88,9 @@
     color:#fff;
     padding:9px 15px;
     border-bottom:1px solid #138496;
-    background-color: #138496;;
-    -webkit-border-top-left-radius: 4px;
-    -webkit-border-top-right-radius: 4px;
-    -moz-border-radius-topleft: 4px;
-    -moz-border-radius-topright: 4px;
-     border-top-left-radius: 4px;
-     border-top-right-radius: 4px;
+    background-color: #138496;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
 }
 
 div.dt-buttons {
@@ -169,30 +154,21 @@ div.dataTables_paginate paging_simple_numbers {
     text-align: center;
   }
 
-  link):not(.btn-flat), .btn:not(.btn-link):not(.btn-flat) {
-    background-color: transparent;
-    color: #444;
-    color: rgba(0,0,0,.84);
+@media (min-width: 768px) {
+  .modal-lg {
+    width: 750px;
   }
-
-
-  @media (min-width: 768px) {
-    .modal-lg {
-      width: 750px;
-    }
+}
+@media (min-width: 992px) {
+  .modal-lg {
+    width: 90%;
   }
-  @media (min-width: 992px) {
-    .modal-lg {
-      /*width: 970px;*/
-      width: 90%;
-    }
+}
+@media (min-width: 1200px) {
+  .modal-lg {
+    width: 1170px;
   }
-  @media (min-width: 1200px) {
-    .modal-lg {
-      width: 1170px;
-     /* width: 95%;*/
-    }
-  }
+}
 
 .select2-selection__rendered {
   line-height: 35px !important;

@@ -95,9 +95,7 @@
     <script src="../public/datatables.net/js/dataTables.select.min.js"></script>
     
     <script src="../public/jquery.inputmask/dist/jquery.inputmask.bundle.js"></script>
-
-    <script src="../public/jquery.inputmask/dist/jquery.inputmask.js"></script>
-    <script src="../public/jquery.inputmask/dist/jquery.inputmask.numeric.extensions.js"></script>
+    <script src="../public/jquery.inputmask/dist/inputmask/inputmask.numeric.extensions.js"></script>
 
 
       <script type="text/javascript" src="../public/js/mustache.min.js"></script>

@@ -73,7 +73,7 @@ while ($reg=pg_fetch_object($rs)){
     <link rel="stylesheet" href="../public/toastr/toastr.min.css">
 
     <!-- Custom Theme Style -->
-    <link href="../public/build/css/custom.css" rel="stylesheet">
+    <link href="../public/build/css/custom.css?v=<?php echo filemtime('../public/build/css/custom.css'); ?>" rel="stylesheet">
 
     <link rel="stylesheet" href="../public/bootstrap-dialog/css/bootstrap-dialog.min.css">
 
