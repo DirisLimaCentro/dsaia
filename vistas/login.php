@@ -1,4 +1,4 @@
-// AL INICIO DEL ARCHIVO (antes del HTML):
+<!-- // AL INICIO DEL ARCHIVO (antes del HTML): -->
 <?php
 session_start();
 if (empty($_SESSION['csrf_token'])) {
